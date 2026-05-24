@@ -90,10 +90,16 @@
   .checkbox-row{display:flex;align-items:center;gap:8px;font-size:14px}
   .checkbox-row input{width:18px;height:18px;cursor:pointer;flex-shrink:0}
   .empty-state{text-align:center;padding:40px 20px;color:var(--text3);font-size:14px}
-  .note-text{font-size:12px;color:var(--text2);font-style:italic;margin-top:2px}
+  .note-text{font-size:12px;color:var(--text2);font-style:italic}
   .section-label{font-size:11px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:0.06em;margin:20px 0 6px;padding:0 2px}
   .section-label:first-child{margin-top:0}
-  .sync-bar{font-size:11px;color:var(--text3);text-align:center;padding:4px;flex-shrink:0}
+  .sync-bar{font-size:11px;color:var(--text3);text-align:center;padding:4px;flex-shrink:0;min-height:20px}
+  /* Setup screen */
+  .setup-wrap{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:60vh;padding:24px}
+  .setup-card{background:var(--bg);border:0.5px solid var(--border);border-radius:var(--radius);padding:20px;width:100%;max-width:400px}
+  .setup-title{font-size:18px;font-weight:600;margin-bottom:6px}
+  .setup-sub{font-size:13px;color:var(--text2);margin-bottom:20px;line-height:1.5}
+  .setup-step{font-size:11px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:0.05em;margin:16px 0 4px}
 </style>
 </head>
 <body>
@@ -134,13 +140,6 @@
 
 <script>
 // ============================================================
-// GIST CONFIG — your personal cloud backup
-// ============================================================
-const GIST_TOKEN = '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';
-const GIST_ID    = '1d12b9d8621853890757f87117ca8fc8';
-const GIST_FILE  = 'gym-tracker-data.json';
-
-// ============================================================
 // DATA MODEL
 // ============================================================
 const DAY_NAMES = ["","Upper Pull","Lower Glute Heavy","Upper Push","Lower + Core"];
@@ -174,7 +173,7 @@ const DEFAULT_PROGRAM = [
 ];
 
 // ============================================================
-// STORAGE
+// STORAGE — all in localStorage, token never in code
 // ============================================================
 function load(key, def) {
   try { const v = localStorage.getItem(key); return v ? JSON.parse(v) : def; } catch { return def; }
@@ -183,9 +182,23 @@ function save(key, val) {
   try { localStorage.setItem(key, JSON.stringify(val)); } catch {}
 }
 
+// Gist credentials stored only in localStorage on the user's device
+function getGistToken() { return localStorage.getItem('wt_gist_token') || ''; }
+function getGistId()    { return localStorage.getItem('wt_gist_id')    || ''; }
+function saveGistCreds(token, id) {
+  localStorage.setItem('wt_gist_token', token);
+  localStorage.setItem('wt_gist_id', id);
+}
+function clearGistCreds() {
+  localStorage.removeItem('wt_gist_token');
+  localStorage.removeItem('wt_gist_id');
+}
+
+const GIST_FILE = 'gym-tracker-data.json';
+
 let program = load('wt_program', DEFAULT_PROGRAM.map((e,i) => ({...e, id:i})));
-let session = load('wt_session', null);
-let history = load('wt_history', []);
+let session  = load('wt_session', null);
+let history  = load('wt_history', []);
 
 function saveAll() {
   save('wt_program', program);
@@ -196,33 +209,27 @@ function saveAll() {
 // ============================================================
 // GIST SYNC
 // ============================================================
-let syncStatus = '';
-
 function setSyncBar(msg) {
-  syncStatus = msg;
   const bar = document.getElementById('sync-bar');
   if (bar) bar.textContent = msg;
 }
 
 async function syncToGist() {
-  if (!GIST_TOKEN || !GIST_ID) return;
+  const token = getGistToken();
+  const gistId = getGistId();
+  if (!token || !gistId) return;
   setSyncBar('Saving to cloud…');
   try {
     const data = { program, history, savedAt: new Date().toISOString() };
-    const res = await fetch(`https://api.github.com/gists/${GIST_ID}`, {
+    const res = await fetch(`https://api.github.com/gists/${gistId}`, {
       method: 'PATCH',
-      headers: {
-        'Authorization': `token ${GIST_TOKEN}`,
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({
-        files: { [GIST_FILE]: { content: JSON.stringify(data, null, 2) } }
-      })
+      headers: { 'Authorization': `token ${token}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ files: { [GIST_FILE]: { content: JSON.stringify(data, null, 2) } } })
     });
     if (res.ok) {
-      setSyncBar('Cloud saved ✓ ' + new Date().toLocaleTimeString('en-AU', {hour:'2-digit',minute:'2-digit'}));
+      setSyncBar('Cloud saved ✓ ' + new Date().toLocaleTimeString('en-AU',{hour:'2-digit',minute:'2-digit'}));
     } else {
-      setSyncBar('Cloud save failed');
+      setSyncBar('Cloud save failed — check your token');
     }
   } catch(e) {
     setSyncBar('Cloud save failed (offline?)');
@@ -230,21 +237,19 @@ async function syncToGist() {
 }
 
 async function loadFromGist() {
-  if (!GIST_TOKEN || !GIST_ID) return false;
+  const token = getGistToken();
+  const gistId = getGistId();
+  if (!token || !gistId) return false;
   setSyncBar('Loading from cloud…');
   try {
-    const res = await fetch(`https://api.github.com/gists/${GIST_ID}`, {
-      headers: { 'Authorization': `token ${GIST_TOKEN}` }
+    const res = await fetch(`https://api.github.com/gists/${gistId}`, {
+      headers: { 'Authorization': `token ${token}` }
     });
-    if (!res.ok) { setSyncBar(''); return false; }
+    if (!res.ok) { setSyncBar('Could not reach Gist'); return false; }
     const gist = await res.json();
     const file = gist.files[GIST_FILE];
-    if (!file || !file.content || file.content.trim() === '{}') {
-      setSyncBar('');
-      return false;
-    }
+    if (!file || !file.content || file.content.trim() === '{}') { setSyncBar(''); return false; }
     const data = JSON.parse(file.content);
-    // Only load from Gist if it has real data
     if (data.program && data.program.length > 0) {
       program = data.program;
       history = data.history || [];
@@ -264,23 +269,19 @@ async function loadFromGist() {
 // CORE LOGIC
 // ============================================================
 function parseSetInput(input) {
-  return input.trim().split('\n')
-    .map(line => {
-      line = line.trim();
-      const m = line.match(/^(\d+\.?\d*)\s*[xX×]\s*(\d+)/);
-      if (m) return { weight: parseFloat(m[1]), reps: parseInt(m[2]) };
-      return null;
-    })
-    .filter(Boolean);
+  return input.trim().split('\n').map(line => {
+    line = line.trim();
+    const m = line.match(/^(\d+\.?\d*)\s*[xX×]\s*(\d+)/);
+    if (m) return { weight: parseFloat(m[1]), reps: parseInt(m[2]) };
+    return null;
+  }).filter(Boolean);
 }
 
 function calculateTopSet(sets, repMin, repMax) {
   if (!sets || !sets.length) return null;
   const inRange = sets.filter(s => s.reps >= repMin && s.reps <= repMax);
-  if (inRange.length > 0) {
-    return inRange.sort((a,b) => b.reps - a.reps || b.weight - a.weight)[0];
-  }
-  return [...sets].sort((a,b) => b.weight - a.weight || b.reps - a.reps)[0];
+  if (inRange.length > 0) return inRange.sort((a,b) => b.reps-a.reps || b.weight-a.weight)[0];
+  return [...sets].sort((a,b) => b.weight-a.weight || b.reps-a.reps)[0];
 }
 
 function calculateProgression(topSet, repMin, repMax) {
@@ -290,27 +291,19 @@ function calculateProgression(topSet, repMin, repMax) {
   return "-";
 }
 
-// Auto weight update:
-// If top set is within or above rep range (• or +), update stored weight to what was logged.
-// If below range (−), leave stored weight unchanged — it was a failed attempt.
+// Only update stored weight if reps were achieved (• or +).
+// A failed set (−) keeps the existing weight — treat it as a bad day, not a new baseline.
 function maybeUpdateWeight(ex, topSet, sym) {
-  if (!ex || !topSet) return;
-  if (ex.isCardio || ex.isTime) return;
-  if (sym === '+' || sym === '•') {
-    if (topSet.weight !== ex.weight) {
-      ex.weight = topSet.weight;
-    }
+  if (!ex || !topSet || ex.isCardio || ex.isTime) return;
+  if ((sym === '+' || sym === '•') && topSet.weight !== ex.weight) {
+    ex.weight = topSet.weight;
   }
-  // sym === '-': do nothing, keep existing weight
 }
 
 function formatWeightShort(ex) {
   if (ex.isCardio || ex.isTime) return ex.notes || "—";
   if (!ex.weight && !ex.startRes) return "—";
-  if (ex.startRes) {
-    const total = Math.round((ex.startRes + ex.weight) * 10) / 10;
-    return `${total} kg`;
-  }
+  if (ex.startRes) return `${Math.round((ex.startRes + ex.weight)*10)/10} kg`;
   if (!ex.weight) return "—";
   return ex.weight + (ex.perHand ? " /hand" : "") + " kg";
 }
@@ -318,16 +311,16 @@ function formatWeightShort(ex) {
 function formatWeightFull(ex) {
   if (!ex.weight && !ex.startRes) return "—";
   if (ex.startRes) {
-    const total = Math.round((ex.startRes + ex.weight) * 10) / 10;
+    const total = Math.round((ex.startRes + ex.weight)*10)/10;
     return `(${ex.startRes})+${ex.weight} = ${total} kg`;
   }
   return ex.weight + (ex.perHand ? " /hand" : "") + " kg";
 }
 
 function pillClass(sym) {
-  if (sym === "+") return "plus";
-  if (sym === "•") return "dot";
-  if (sym === "-") return "minus";
+  if (sym==="+") return "plus";
+  if (sym==="•") return "dot";
+  if (sym==="-") return "minus";
   return "empty";
 }
 
@@ -342,17 +335,11 @@ let flashMsg = "";
 let flashType = "info";
 let setInputVal = "";
 
-function setView(v) {
-  view = v;
-  editingId = null;
-  render();
-}
+function setView(v) { view=v; editingId=null; render(); }
 
 function showMsg(m, type='info') {
-  flashMsg = m;
-  flashType = type;
-  render();
-  setTimeout(() => { flashMsg = ""; render(); }, 2500);
+  flashMsg=m; flashType=type; render();
+  setTimeout(()=>{ flashMsg=""; render(); }, 2500);
 }
 
 // ============================================================
@@ -361,14 +348,14 @@ function showMsg(m, type='info') {
 function el(tag, attrs={}, children=[]) {
   const e = document.createElement(tag);
   Object.entries(attrs).forEach(([k,v]) => {
-    if (k === 'class') e.className = v;
-    else if (k === 'style') e.style.cssText = v;
-    else if (k.startsWith('on')) e[k] = v;
-    else if (k === 'html') e.innerHTML = v;
-    else e.setAttribute(k, v);
+    if (k==='class') e.className=v;
+    else if (k==='style') e.style.cssText=v;
+    else if (k.startsWith('on')) e[k]=v;
+    else if (k==='html') e.innerHTML=v;
+    else e.setAttribute(k,v);
   });
   children.forEach(c => {
-    if (typeof c === 'string') e.appendChild(document.createTextNode(c));
+    if (typeof c==='string') e.appendChild(document.createTextNode(c));
     else if (c) e.appendChild(c);
   });
   return e;
@@ -377,78 +364,106 @@ function el(tag, attrs={}, children=[]) {
 function render() {
   ['dashboard','workout','summary','editor','exportpage'].forEach(v => {
     const b = document.getElementById('nav-'+v);
-    if (b) b.className = view === v ? 'active' : '';
+    if (b) b.className = view===v ? 'active' : '';
   });
-
   const titles = {
-    dashboard: ['Gym Tracker', ''],
-    workout: session && !session.done ? [`Day ${session.day} — ${DAY_NAMES[session.day]}`, ''] : ['Workout',''],
-    summary: ['Summary', ''],
-    editor: ['Edit Program', `Day ${editorDay} — ${DAY_NAMES[editorDay]}`],
-    exportpage: ['Export / Import', '']
+    dashboard:  ['Gym Tracker',''],
+    workout:    session&&!session.done ? [`Day ${session.day} — ${DAY_NAMES[session.day]}`,''] : ['Workout',''],
+    summary:    ['Summary',''],
+    editor:     ['Edit Program', `Day ${editorDay} — ${DAY_NAMES[editorDay]}`],
+    exportpage: ['Export / Sync','']
   };
-  const [title, sub] = titles[view] || ['Gym Tracker',''];
+  const [title,sub] = titles[view]||['Gym Tracker',''];
   document.getElementById('topbar-title').textContent = title;
   document.getElementById('topbar-sub').textContent = sub;
   document.getElementById('topbar-action').innerHTML = '';
-
   const main = document.getElementById('main');
   main.innerHTML = '';
+  if (flashMsg) main.appendChild(el('div',{class:`msg ${flashType}`},[flashMsg]));
+  if (view==='dashboard')   renderDashboard(main);
+  else if (view==='workout')     renderWorkout(main);
+  else if (view==='summary')     renderSummary(main);
+  else if (view==='editor')      renderEditor(main);
+  else if (view==='exportpage')  renderExportPage(main);
+}
 
-  if (flashMsg) {
-    main.appendChild(el('div', {class:`msg ${flashType}`}, [flashMsg]));
-  }
+// ============================================================
+// SETUP SCREEN — shown inside Export tab if no creds saved
+// ============================================================
+function renderSetup(main) {
+  const wrap = el('div', {class:'setup-wrap'});
+  const card = el('div', {class:'setup-card'});
 
-  if (view === 'dashboard') renderDashboard(main);
-  else if (view === 'workout') renderWorkout(main);
-  else if (view === 'summary') renderSummary(main);
-  else if (view === 'editor') renderEditor(main);
-  else if (view === 'exportpage') renderExportPage(main);
+  card.appendChild(el('div', {class:'setup-title'}, ['Cloud Sync Setup']));
+  card.appendChild(el('div', {class:'setup-sub'}, [
+    'Enter your GitHub credentials to enable automatic cloud backup. These are stored only on this device — never in the app code.'
+  ]));
+
+  card.appendChild(el('div', {class:'setup-step'}, ['Your GitHub Personal Access Token']));
+  card.appendChild(el('div', {class:'form-label'}, ['Needs "gist" scope only']));
+  const tokenIn = el('input', {type:'password', placeholder:'ghp_xxxxxxxxxxxx'});
+  card.appendChild(tokenIn);
+
+  card.appendChild(el('div', {class:'setup-step', style:'margin-top:16px'}, ['Your Gist ID']));
+  card.appendChild(el('div', {class:'form-label'}, ['From: gist.github.com/username/THIS_PART']));
+  const gistIn = el('input', {type:'text', placeholder:'1d12b9d8621853890757f87117ca8fc8'});
+  card.appendChild(gistIn);
+
+  const saveBtn = el('button', {class:'btn primary full', style:'margin-top:20px', onclick:async()=>{
+    const t = tokenIn.value.trim();
+    const g = gistIn.value.trim();
+    if (!t || !g) { showMsg('Please fill in both fields','error'); return; }
+    saveGistCreds(t, g);
+    showMsg('Credentials saved — connecting…','success');
+    const loaded = await loadFromGist();
+    if (loaded) { showMsg('Loaded existing data from Gist ✓','success'); }
+    render();
+  }}, ['Save & Connect']);
+
+  const skipBtn = el('button', {class:'btn full', style:'margin-bottom:0', onclick:()=>{
+    // Mark setup as skipped so we don't keep showing it
+    localStorage.setItem('wt_setup_skipped','1');
+    setView('dashboard');
+  }}, ['Skip — use local storage only']);
+
+  card.appendChild(saveBtn);
+  card.appendChild(skipBtn);
+  wrap.appendChild(card);
+  main.appendChild(wrap);
 }
 
 // ============================================================
 // DASHBOARD
 // ============================================================
 function renderDashboard(main) {
-  main.appendChild(el('h2', {}, ['Choose a day']));
-
-  if (session && !session.done) {
-    const banner = el('div', {class:'resume-banner'});
+  main.appendChild(el('h2',{},'Choose a day'));
+  if (session&&!session.done) {
+    const banner = el('div',{class:'resume-banner'});
     const info = el('div');
     info.innerHTML = `<div style="font-weight:600;font-size:14px">Active: Day ${session.day}</div><div style="font-size:12px;color:var(--text2);margin-top:2px">${DAY_NAMES[session.day]}</div>`;
-    const btn = el('button', {class:'btn primary', onclick:()=>setView('workout')}, ['Resume']);
     banner.appendChild(info);
-    banner.appendChild(btn);
+    banner.appendChild(el('button',{class:'btn primary',onclick:()=>setView('workout')},['Resume']));
     main.appendChild(banner);
   }
-
-  for (let d = 1; d <= 4; d++) {
-    const exes = program.filter(e => e.day === d);
-    const last = history.filter(h => h.day === d).slice(-1)[0];
-    const lastDate = last
-      ? new Date(last.date).toLocaleDateString('en-AU',{weekday:'short',day:'numeric',month:'short'})
-      : 'Never';
-
-    const card = el('button', {class:'day-card', onclick:()=>startWorkout(d)});
-    card.innerHTML = `
-      <div class="day-num">Day ${d} &nbsp;·&nbsp; ${exes.length} exercises</div>
-      <div class="day-name">${DAY_NAMES[d]}</div>
-      <div class="day-meta">Last: ${lastDate}</div>
-    `;
+  for (let d=1;d<=4;d++) {
+    const exes = program.filter(e=>e.day===d);
+    const last = history.filter(h=>h.day===d).slice(-1)[0];
+    const lastDate = last ? new Date(last.date).toLocaleDateString('en-AU',{weekday:'short',day:'numeric',month:'short'}) : 'Never';
+    const card = el('button',{class:'day-card',onclick:()=>startWorkout(d)});
+    card.innerHTML=`<div class="day-num">Day ${d} &nbsp;·&nbsp; ${exes.length} exercises</div><div class="day-name">${DAY_NAMES[d]}</div><div class="day-meta">Last: ${lastDate}</div>`;
     main.appendChild(card);
   }
 }
 
 function startWorkout(d) {
-  if (session && !session.done) {
+  if (session&&!session.done) {
     if (!confirm(`Abandon current Day ${session.day} session and start Day ${d}?`)) return;
   }
-  const exes = program.filter(e => e.day === d);
-  const loggedSets = {};
-  const notes = {};
-  exes.forEach(e => { loggedSets[e.id] = []; notes[e.id] = ""; });
-  session = { day:d, exIndex:0, loggedSets, notes, dayNotes:"", done:false };
-  setInputVal = "";
+  const exes = program.filter(e=>e.day===d);
+  const loggedSets={}, notes={};
+  exes.forEach(e=>{loggedSets[e.id]=[]; notes[e.id]="";});
+  session={day:d,exIndex:0,loggedSets,notes,dayNotes:"",done:false};
+  setInputVal="";
   saveAll();
   setView('workout');
 }
@@ -457,118 +472,98 @@ function startWorkout(d) {
 // WORKOUT
 // ============================================================
 function renderWorkout(main) {
-  if (!session || session.done) {
-    main.appendChild(el('div', {class:'empty-state'}, [
-      'No active session.',
-      el('br'), el('br'),
-      el('button', {class:'btn primary', onclick:()=>setView('dashboard')}, ['Choose a day'])
+  if (!session||session.done) {
+    main.appendChild(el('div',{class:'empty-state'},[
+      'No active session.',el('br'),el('br'),
+      el('button',{class:'btn primary',onclick:()=>setView('dashboard')},['Choose a day'])
     ]));
     return;
   }
-
-  const dayExes = program.filter(e => e.day === session.day);
+  const dayExes = program.filter(e=>e.day===session.day);
   const curEx = dayExes[session.exIndex];
-  const pct = Math.round(session.exIndex / dayExes.length * 100);
-
-  const pb = el('div', {class:'progress-bar'});
-  pb.appendChild(el('div', {class:'progress-fill', style:`width:${pct}%`}));
+  const pct = Math.round(session.exIndex/dayExes.length*100);
+  const pb = el('div',{class:'progress-bar'});
+  pb.appendChild(el('div',{class:'progress-fill',style:`width:${pct}%`}));
   main.appendChild(pb);
 
   if (curEx) {
-    const card = el('div', {class:'card'});
-    const hdr = el('div', {class:'ex-header'});
-    const hdrTop = el('div', {style:'display:flex;align-items:flex-start;justify-content:space-between'});
+    const card = el('div',{class:'card'});
+    const hdr = el('div',{class:'ex-header'});
+    const hdrTop = el('div',{style:'display:flex;align-items:flex-start;justify-content:space-between'});
     const nameBlock = el('div');
-    nameBlock.innerHTML = `<div style="font-size:11px;color:var(--text2);font-weight:500;margin-bottom:2px">${session.exIndex+1} of ${dayExes.length}</div><div style="font-size:17px;font-weight:600">${curEx.name}</div>`;
-    const skipBtn = el('button', {class:'btn sm', onclick:skipExercise}, ['Skip']);
+    nameBlock.innerHTML=`<div style="font-size:11px;color:var(--text2);font-weight:500;margin-bottom:2px">${session.exIndex+1} of ${dayExes.length}</div><div style="font-size:17px;font-weight:600">${curEx.name}</div>`;
     hdrTop.appendChild(nameBlock);
-    hdrTop.appendChild(skipBtn);
+    hdrTop.appendChild(el('button',{class:'btn sm',onclick:skipExercise},['Skip']));
     hdr.appendChild(hdrTop);
-
-    const meta = el('div', {class:'ex-meta'});
-    if (!curEx.isCardio && !curEx.isTime) {
-      meta.appendChild(el('span', {class:'tag'}, [formatWeightFull(curEx)]));
-    }
-    meta.appendChild(el('span', {class:'tag'}, [`${curEx.sets}×${curEx.repMin}–${curEx.repMax}`]));
-    if (curEx.symbol) meta.appendChild(el('span', {class:`pill ${pillClass(curEx.symbol)}`}, [curEx.symbol]));
-    if (curEx.notes) meta.appendChild(el('span', {class:'tag'}, [curEx.notes]));
+    const meta = el('div',{class:'ex-meta'});
+    if (!curEx.isCardio&&!curEx.isTime) meta.appendChild(el('span',{class:'tag'},[formatWeightFull(curEx)]));
+    meta.appendChild(el('span',{class:'tag'},[`${curEx.sets}×${curEx.repMin}–${curEx.repMax}`]));
+    if (curEx.symbol) meta.appendChild(el('span',{class:`pill ${pillClass(curEx.symbol)}`},[curEx.symbol]));
+    if (curEx.notes) meta.appendChild(el('span',{class:'tag'},[curEx.notes]));
     hdr.appendChild(meta);
     card.appendChild(hdr);
 
-    const logged = session.loggedSets[curEx.id] || [];
-    logged.forEach((s, i) => {
-      const row = el('div', {class:'set-row'});
-      row.innerHTML = `<span style="font-size:13px;color:var(--text2)">Set ${i+1}</span><span style="font-weight:500">${s.weight} kg × ${s.reps}</span>`;
-      const del = el('button', {class:'btn sm danger', onclick:()=>removeSet(curEx.id, i)}, ['✕']);
-      row.appendChild(del);
+    const logged = session.loggedSets[curEx.id]||[];
+    logged.forEach((s,i)=>{
+      const row = el('div',{class:'set-row'});
+      row.innerHTML=`<span style="font-size:13px;color:var(--text2)">Set ${i+1}</span><span style="font-weight:500">${s.weight} kg × ${s.reps}</span>`;
+      row.appendChild(el('button',{class:'btn sm danger',onclick:()=>removeSet(curEx.id,i)},['✕']));
       card.appendChild(row);
     });
 
-    const inputSection = el('div', {class:'card-body'});
-    const inputLabel = el('div', {class:'form-label'}, ['Log sets — one per line (e.g. 45 × 10)']);
-    const ta = el('textarea', {placeholder:`${curEx.weight||20} × 10\n${curEx.weight||20} × 9`});
-    ta.id = 'set-input';
-    ta.value = setInputVal;
-    ta.oninput = () => setInputVal = ta.value;
-
-    const btnRow = el('div', {style:'display:flex;gap:8px;margin-top:10px'});
-    const logBtn = el('button', {class:'btn', style:'flex:1', onclick:()=>logSets(curEx.id)}, ['Add sets']);
-    const nextBtn = el('button', {class:'btn primary', style:'flex:1', onclick:()=>completeExercise(curEx.id)}, ['Done ›']);
-    btnRow.appendChild(logBtn);
-    btnRow.appendChild(nextBtn);
-    inputSection.appendChild(inputLabel);
-    inputSection.appendChild(ta);
-    inputSection.appendChild(btnRow);
-
-    const noteLabel = el('div', {class:'form-label', style:'margin-top:12px'}, ['Notes (optional)']);
-    const noteIn = el('input', {type:'text', placeholder:'e.g. left wrist irritation'});
-    noteIn.value = session.notes[curEx.id] || '';
-    noteIn.oninput = () => { session.notes[curEx.id] = noteIn.value; save('wt_session', session); };
-    inputSection.appendChild(noteLabel);
-    inputSection.appendChild(noteIn);
-    card.appendChild(inputSection);
+    const body = el('div',{class:'card-body'});
+    body.appendChild(el('div',{class:'form-label'},['Log sets — one per line (e.g. 45 × 10)']));
+    const ta = el('textarea',{placeholder:`${curEx.weight||20} × 10\n${curEx.weight||20} × 9`});
+    ta.id='set-input'; ta.value=setInputVal;
+    ta.oninput=()=>setInputVal=ta.value;
+    body.appendChild(ta);
+    const btnRow = el('div',{style:'display:flex;gap:8px;margin-top:10px'});
+    btnRow.appendChild(el('button',{class:'btn',style:'flex:1',onclick:()=>logSets(curEx.id)},['Add sets']));
+    btnRow.appendChild(el('button',{class:'btn primary',style:'flex:1',onclick:()=>completeExercise(curEx.id)},['Done ›']));
+    body.appendChild(btnRow);
+    body.appendChild(el('div',{class:'form-label',style:'margin-top:12px'},['Notes (optional)']));
+    const noteIn = el('input',{type:'text',placeholder:'e.g. left wrist irritation'});
+    noteIn.value=session.notes[curEx.id]||'';
+    noteIn.oninput=()=>{session.notes[curEx.id]=noteIn.value; save('wt_session',session);};
+    body.appendChild(noteIn);
+    card.appendChild(body);
     main.appendChild(card);
   } else {
-    main.appendChild(el('div', {class:'card card-body', style:'text-align:center'}, [
-      el('div', {style:'font-size:28px;margin-bottom:8px'}, ['✓']),
-      el('div', {style:'font-weight:600;font-size:16px'}, ['All exercises logged']),
-      el('div', {style:'font-size:13px;color:var(--text2);margin-top:4px'}, ['Add day notes below, then finish.'])
+    main.appendChild(el('div',{class:'card card-body',style:'text-align:center'},[
+      el('div',{style:'font-size:28px;margin-bottom:8px'},['✓']),
+      el('div',{style:'font-weight:600;font-size:16px'},['All exercises logged']),
+      el('div',{style:'font-size:13px;color:var(--text2);margin-top:4px'},['Add day notes below, then finish.'])
     ]));
   }
 
-  const dnCard = el('div', {class:'card card-body'});
-  const dnLabel = el('div', {class:'form-label'}, ['Day notes']);
-  const dnIn = el('textarea');
-  dnIn.style.minHeight = '60px';
-  dnIn.placeholder = 'General notes for this session...';
-  dnIn.value = session.dayNotes || '';
-  dnIn.oninput = () => { session.dayNotes = dnIn.value; save('wt_session', session); };
-  const finishBtn = el('button', {class:'btn primary full', style:'margin-top:10px', onclick:finishWorkout}, ['Finish workout']);
-  dnCard.appendChild(dnLabel);
+  const dnCard = el('div',{class:'card card-body'});
+  dnCard.appendChild(el('div',{class:'form-label'},['Day notes']));
+  const dnIn = el('textarea'); dnIn.style.minHeight='60px';
+  dnIn.placeholder='General notes for this session...';
+  dnIn.value=session.dayNotes||'';
+  dnIn.oninput=()=>{session.dayNotes=dnIn.value; save('wt_session',session);};
   dnCard.appendChild(dnIn);
-  dnCard.appendChild(finishBtn);
+  dnCard.appendChild(el('button',{class:'btn primary full',style:'margin-top:10px',onclick:finishWorkout},['Finish workout']));
   main.appendChild(dnCard);
 
-  main.appendChild(el('div', {class:'section-label'}, ['All exercises']));
-  const listCard = el('div', {class:'card'});
-  dayExes.forEach((e, i) => {
-    const isDone = i < session.exIndex;
-    const isCur = i === session.exIndex;
-    const row = el('div', {class:'card-row'});
-    const nameEl = el('span', {style:`font-size:14px;${isDone?'text-decoration:line-through;color:var(--text3)':''}${isCur?'font-weight:600':''}`}, [e.name]);
-    row.appendChild(nameEl);
-    const right = el('div', {style:'display:flex;align-items:center;gap:6px'});
+  main.appendChild(el('div',{class:'section-label'},['All exercises']));
+  const listCard = el('div',{class:'card'});
+  dayExes.forEach((e,i)=>{
+    const isDone=i<session.exIndex, isCur=i===session.exIndex;
+    const row = el('div',{class:'card-row'});
+    row.appendChild(el('span',{style:`font-size:14px;${isDone?'text-decoration:line-through;color:var(--text3)':''}${isCur?'font-weight:600':''}`},[e.name]));
+    const right = el('div',{style:'display:flex;align-items:center;gap:6px'});
     if (isDone) {
-      const logged = session.loggedSets[e.id] || [];
-      if (logged.length > 0) {
-        const ts = calculateTopSet(logged, e.repMin, e.repMax);
-        const sym = calculateProgression(ts, e.repMin, e.repMax);
-        right.appendChild(el('span', {class:`pill ${pillClass(sym)}`}, [sym]));
+      const lg=session.loggedSets[e.id]||[];
+      if (lg.length>0) {
+        const ts=calculateTopSet(lg,e.repMin,e.repMax);
+        const sym=calculateProgression(ts,e.repMin,e.repMax);
+        right.appendChild(el('span',{class:`pill ${pillClass(sym)}`},[sym]));
       }
     } else if (isCur) {
-      right.appendChild(el('span', {class:'tag'}, ['now']));
+      right.appendChild(el('span',{class:'tag'},['now']));
     } else {
-      right.appendChild(el('span', {style:'font-size:13px;color:var(--text3)'}, [formatWeightShort(e)]));
+      right.appendChild(el('span',{style:'font-size:13px;color:var(--text3)'},[formatWeightShort(e)]));
     }
     row.appendChild(right);
     listCard.appendChild(row);
@@ -577,128 +572,93 @@ function renderWorkout(main) {
 }
 
 function logSets(exId) {
-  const ta = document.getElementById('set-input');
-  if (!ta || !ta.value.trim()) return;
-  const sets = parseSetInput(ta.value);
-  if (!sets.length) { showMsg("Format: 45 × 10 (one per line)", "error"); return; }
-  if (!session.loggedSets[exId]) session.loggedSets[exId] = [];
+  const ta=document.getElementById('set-input');
+  if (!ta||!ta.value.trim()) return;
+  const sets=parseSetInput(ta.value);
+  if (!sets.length){showMsg("Format: 45 × 10 (one per line)","error");return;}
+  if (!session.loggedSets[exId]) session.loggedSets[exId]=[];
   session.loggedSets[exId].push(...sets);
-  setInputVal = "";
-  saveAll();
-  render();
-  setTimeout(() => { const t = document.getElementById('set-input'); if(t) t.focus(); }, 50);
+  setInputVal=""; saveAll(); render();
+  setTimeout(()=>{const t=document.getElementById('set-input');if(t)t.focus();},50);
 }
 
-function removeSet(exId, idx) {
-  session.loggedSets[exId].splice(idx, 1);
-  saveAll();
-  render();
+function removeSet(exId,idx) {
+  session.loggedSets[exId].splice(idx,1);
+  saveAll(); render();
 }
 
 function completeExercise(exId) {
-  const ta = document.getElementById('set-input');
-  if (ta && ta.value.trim()) logSets(exId);
-
-  const ex = program.find(e => e.id === exId);
-  const logged = session.loggedSets[exId] || [];
-
-  if (ex && logged.length > 0 && !ex.isCardio && !ex.isTime) {
-    const ts = calculateTopSet(logged, ex.repMin, ex.repMax);
+  const ta=document.getElementById('set-input');
+  if (ta&&ta.value.trim()) logSets(exId);
+  const ex=program.find(e=>e.id===exId);
+  const logged=session.loggedSets[exId]||[];
+  if (ex&&logged.length>0&&!ex.isCardio&&!ex.isTime) {
+    const ts=calculateTopSet(logged,ex.repMin,ex.repMax);
     if (ts) {
-      const sym = calculateProgression(ts, ex.repMin, ex.repMax);
-      ex.topRep = ts.reps;
-      ex.symbol = sym;
-      // Auto-update weight only if sets were successful (• or +)
-      maybeUpdateWeight(ex, ts, sym);
+      const sym=calculateProgression(ts,ex.repMin,ex.repMax);
+      ex.topRep=ts.reps;
+      ex.symbol=sym;
+      maybeUpdateWeight(ex,ts,sym);
     }
   }
-
-  session.exIndex++;
-  setInputVal = "";
-  saveAll();
-  render();
+  session.exIndex++; setInputVal=""; saveAll(); render();
 }
 
 function skipExercise() {
-  setInputVal = "";
-  session.exIndex++;
-  saveAll();
-  render();
+  setInputVal=""; session.exIndex++; saveAll(); render();
 }
 
 async function finishWorkout() {
-  const dayExes = program.filter(e => e.day === session.day);
-  const entry = {
-    date: new Date().toISOString(),
-    day: session.day,
-    dayName: DAY_NAMES[session.day],
-    dayNotes: session.dayNotes,
-    exercises: dayExes.map(e => {
-      const logged = session.loggedSets[e.id] || [];
-      const ts = logged.length ? calculateTopSet(logged, e.repMin, e.repMax) : null;
-      const sym = ts ? calculateProgression(ts, e.repMin, e.repMax) : (e.symbol || "");
-      return { ...e, loggedSets:logged, topRepSession:ts?ts.reps:null, symbolSession:sym, sessionNotes:session.notes[e.id]||"" };
+  const dayExes=program.filter(e=>e.day===session.day);
+  const entry={
+    date:new Date().toISOString(), day:session.day, dayName:DAY_NAMES[session.day],
+    dayNotes:session.dayNotes,
+    exercises:dayExes.map(e=>{
+      const logged=session.loggedSets[e.id]||[];
+      const ts=logged.length?calculateTopSet(logged,e.repMin,e.repMax):null;
+      const sym=ts?calculateProgression(ts,e.repMin,e.repMax):(e.symbol||"");
+      return{...e,loggedSets:logged,topRepSession:ts?ts.reps:null,symbolSession:sym,sessionNotes:session.notes[e.id]||""};
     })
   };
   history.push(entry);
-  session.done = true;
+  session.done=true;
   saveAll();
-  showMsg("Workout saved!", "success");
-  // Sync to Gist after finishing
+  showMsg("Workout saved!","success");
   await syncToGist();
-  setTimeout(() => setView('summary'), 1000);
+  setTimeout(()=>setView('summary'),1000);
 }
 
 // ============================================================
 // SUMMARY
 // ============================================================
 function renderSummary(main) {
-  main.appendChild(el('h2', {}, ['Summary']));
-
-  for (let d = 1; d <= 4; d++) {
-    main.appendChild(el('div', {class:'section-label'}, [`Day ${d} — ${DAY_NAMES[d]}`]));
-    const card = el('div', {class:'card', style:'overflow:auto'});
-    const tbl = el('table');
-    tbl.innerHTML = '<thead><tr><th>Exercise</th><th>Weight</th><th></th><th>Top</th></tr></thead>';
-    const tb = el('tbody');
-    program.filter(e => e.day === d).forEach(e => {
-      const tr = el('tr');
-      tr.innerHTML = `
-        <td>${e.name}${e.perHand?'<br><span class="tag">per hand</span>':''}</td>
-        <td style="white-space:nowrap;font-size:12px">${formatWeightShort(e)}</td>
-        <td><span class="pill ${pillClass(e.symbol)}">${e.symbol||'—'}</span></td>
-        <td style="font-size:13px">${e.topRep?e.topRep+(e.isTime?'s':''):'—'}</td>
-      `;
+  main.appendChild(el('h2',{},'Summary'));
+  for (let d=1;d<=4;d++) {
+    main.appendChild(el('div',{class:'section-label'},[`Day ${d} — ${DAY_NAMES[d]}`]));
+    const card=el('div',{class:'card',style:'overflow:auto'});
+    const tbl=el('table');
+    tbl.innerHTML='<thead><tr><th>Exercise</th><th>Weight</th><th></th><th>Top</th></tr></thead>';
+    const tb=el('tbody');
+    program.filter(e=>e.day===d).forEach(e=>{
+      const tr=el('tr');
+      tr.innerHTML=`<td>${e.name}${e.perHand?'<br><span class="tag">per hand</span>':''}</td><td style="white-space:nowrap;font-size:12px">${formatWeightShort(e)}</td><td><span class="pill ${pillClass(e.symbol)}">${e.symbol||'—'}</span></td><td style="font-size:13px">${e.topRep?e.topRep+(e.isTime?'s':''):'—'}</td>`;
       tb.appendChild(tr);
     });
-    tbl.appendChild(tb);
-    card.appendChild(tbl);
-    main.appendChild(card);
+    tbl.appendChild(tb); card.appendChild(tbl); main.appendChild(card);
   }
-
-  if (history.length > 0) {
-    main.appendChild(el('div', {class:'section-label'}, ['Recent sessions']));
-    history.slice(-10).reverse().forEach(entry => {
-      const card = el('div', {class:'card'});
-      const date = new Date(entry.date).toLocaleDateString('en-AU',{weekday:'short',day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'});
-      const hdr = el('div', {class:'card-row'});
-      hdr.innerHTML = `<span style="font-weight:600">Day ${entry.day} — ${entry.dayName}</span><span style="font-size:12px;color:var(--text2)">${date}</span>`;
+  if (history.length>0) {
+    main.appendChild(el('div',{class:'section-label'},['Recent sessions']));
+    history.slice(-10).reverse().forEach(entry=>{
+      const card=el('div',{class:'card'});
+      const date=new Date(entry.date).toLocaleDateString('en-AU',{weekday:'short',day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'});
+      const hdr=el('div',{class:'card-row'});
+      hdr.innerHTML=`<span style="font-weight:600">Day ${entry.day} — ${entry.dayName}</span><span style="font-size:12px;color:var(--text2)">${date}</span>`;
       card.appendChild(hdr);
-      if (entry.dayNotes) {
-        const dn = el('div', {class:'card-row'});
-        dn.innerHTML = `<span class="note-text">${entry.dayNotes}</span>`;
-        card.appendChild(dn);
-      }
-      entry.exercises.filter(e => e.loggedSets && e.loggedSets.length > 0).forEach(e => {
-        const row = el('div', {class:'card-row'});
-        const sym = e.symbolSession || '';
-        row.innerHTML = `
-          <span style="font-size:13px">${e.name}</span>
-          <div style="display:flex;align-items:center;gap:8px">
-            <span style="font-size:12px;color:var(--text2)">${e.loggedSets.map(s=>`${s.weight}×${s.reps}`).join(', ')}</span>
-            <span class="pill ${pillClass(sym)}">${sym||'—'}</span>
-          </div>
-        `;
+      if (entry.dayNotes){const dn=el('div',{class:'card-row'});dn.innerHTML=`<span class="note-text">${entry.dayNotes}</span>`;card.appendChild(dn);}
+      entry.exercises.filter(e=>e.loggedSets&&e.loggedSets.length>0).forEach(e=>{
+        const row=el('div',{class:'card-row'});
+        const sym=e.symbolSession||'';
+        row.innerHTML=`<span style="font-size:13px">${e.name}</span><div style="display:flex;align-items:center;gap:8px"><span style="font-size:12px;color:var(--text2)">${e.loggedSets.map(s=>`${s.weight}×${s.reps}`).join(', ')}</span><span class="pill ${pillClass(sym)}">${sym||'—'}</span></div>`;
         card.appendChild(row);
       });
       main.appendChild(card);
@@ -710,228 +670,166 @@ function renderSummary(main) {
 // EDITOR
 // ============================================================
 function renderEditor(main) {
-  const dayPicker = el('div', {style:'display:flex;gap:6px;margin-bottom:14px;flex-wrap:wrap'});
-  for (let d = 1; d <= 4; d++) {
-    dayPicker.appendChild(el('button', {
-      class:'btn'+(editorDay===d?' primary':''),
-      onclick:()=>{ editorDay=d; editingId=null; render(); }
-    }, [`Day ${d}`]));
+  const dayPicker=el('div',{style:'display:flex;gap:6px;margin-bottom:14px;flex-wrap:wrap'});
+  for(let d=1;d<=4;d++){
+    dayPicker.appendChild(el('button',{class:'btn'+(editorDay===d?' primary':''),onclick:()=>{editorDay=d;editingId=null;render();}},['Day '+d]));
   }
   main.appendChild(dayPicker);
-
-  const exes = program.filter(e => e.day === editorDay);
-  main.appendChild(el('button', {class:'btn full', onclick:()=>{
-    const newId = Date.now();
+  const exes=program.filter(e=>e.day===editorDay);
+  main.appendChild(el('button',{class:'btn full',onclick:()=>{
+    const newId=Date.now();
     program.push({id:newId,day:editorDay,name:'New exercise',weight:0,perHand:false,startRes:0,symbol:'',topRep:0,sets:3,repMin:8,repMax:12,notes:''});
-    editingId = newId;
-    editDraft = {...program[program.length-1]};
-    saveAll(); render();
-  }}, ['+ Add exercise']));
+    editingId=newId; editDraft={...program[program.length-1]}; saveAll(); render();
+  }},['+ Add exercise']));
 
-  exes.forEach((ex, i) => {
-    const card = el('div', {class:'card', style:'margin-bottom:10px'});
-
-    if (editingId === ex.id) {
-      const body = el('div', {class:'card-body'});
-      body.innerHTML = `<div style="font-weight:600;margin-bottom:12px">Editing: ${ex.name}</div>`;
-
-      const g1 = el('div', {class:'form-group'});
-      g1.appendChild(el('div', {class:'form-label'}, ['Exercise name']));
-      const nameIn = el('input', {type:'text'}); nameIn.value = editDraft.name||'';
-      nameIn.oninput = () => editDraft.name = nameIn.value;
-      g1.appendChild(nameIn); body.appendChild(g1);
-
-      function numField(label, key) {
-        const g = el('div', {class:'form-group'});
-        g.appendChild(el('div', {class:'form-label'}, [label]));
-        const inp = el('input', {type:'number'}); inp.value = editDraft[key]??'';
-        inp.oninput = () => editDraft[key] = parseFloat(inp.value)||0;
+  exes.forEach((ex,i)=>{
+    const card=el('div',{class:'card',style:'margin-bottom:10px'});
+    if (editingId===ex.id) {
+      const body=el('div',{class:'card-body'});
+      body.innerHTML=`<div style="font-weight:600;margin-bottom:12px">Editing: ${ex.name}</div>`;
+      const g1=el('div',{class:'form-group'});
+      g1.appendChild(el('div',{class:'form-label'},['Exercise name']));
+      const ni=el('input',{type:'text'}); ni.value=editDraft.name||''; ni.oninput=()=>editDraft.name=ni.value;
+      g1.appendChild(ni); body.appendChild(g1);
+      function numF(label,key){
+        const g=el('div',{class:'form-group'}); g.appendChild(el('div',{class:'form-label'},[label]));
+        const inp=el('input',{type:'number'}); inp.value=editDraft[key]??''; inp.oninput=()=>editDraft[key]=parseFloat(inp.value)||0;
         g.appendChild(inp); return g;
       }
-
-      const grid1 = el('div', {class:'form-grid'});
-      grid1.appendChild(numField('Added weight (kg)', 'weight'));
-      grid1.appendChild(numField('Starting resistance (kg)', 'startRes'));
-      body.appendChild(grid1);
-
-      const grid2 = el('div', {class:'form-grid'});
-      grid2.appendChild(numField('Min reps', 'repMin'));
-      grid2.appendChild(numField('Max reps', 'repMax'));
-      body.appendChild(grid2);
-
-      const grid3 = el('div', {class:'form-grid'});
-      grid3.appendChild(numField('Sets', 'sets'));
-      const ng = el('div', {class:'form-group'});
-      ng.appendChild(el('div', {class:'form-label'}, ['Notes']));
-      const noteIn = el('input', {type:'text', placeholder:'Optional'}); noteIn.value = editDraft.notes||'';
-      noteIn.oninput = () => editDraft.notes = noteIn.value;
-      ng.appendChild(noteIn); grid3.appendChild(ng);
-      body.appendChild(grid3);
-
-      const cbRow = el('div', {class:'form-group'});
-      const lbl = el('label', {class:'checkbox-row'});
-      const cb = el('input', {type:'checkbox'}); cb.checked = !!editDraft.perHand;
-      cb.onchange = () => editDraft.perHand = cb.checked;
-      lbl.appendChild(cb); lbl.appendChild(document.createTextNode('Per hand / per side'));
-      cbRow.appendChild(lbl); body.appendChild(cbRow);
-
-      const btnRow = el('div', {style:'display:flex;gap:8px;flex-wrap:wrap'});
-      btnRow.appendChild(el('button', {class:'btn primary', onclick:()=>{ Object.assign(ex, editDraft); editingId=null; saveAll(); render(); }}, ['Save']));
-      btnRow.appendChild(el('button', {class:'btn', onclick:()=>{ editingId=null; render(); }}, ['Cancel']));
-      btnRow.appendChild(el('button', {class:'btn danger', onclick:()=>{
-        if (!confirm(`Delete "${ex.name}"?`)) return;
-        program = program.filter(e => e.id !== ex.id);
-        editingId=null; saveAll(); render();
-      }}, ['Delete']));
-      body.appendChild(btnRow);
-      card.appendChild(body);
-
+      const gr1=el('div',{class:'form-grid'}); gr1.appendChild(numF('Added weight (kg)','weight')); gr1.appendChild(numF('Starting resistance','startRes')); body.appendChild(gr1);
+      const gr2=el('div',{class:'form-grid'}); gr2.appendChild(numF('Min reps','repMin')); gr2.appendChild(numF('Max reps','repMax')); body.appendChild(gr2);
+      const gr3=el('div',{class:'form-grid'}); gr3.appendChild(numF('Sets','sets'));
+      const ng=el('div',{class:'form-group'}); ng.appendChild(el('div',{class:'form-label'},['Notes']));
+      const nti=el('input',{type:'text',placeholder:'Optional'}); nti.value=editDraft.notes||''; nti.oninput=()=>editDraft.notes=nti.value;
+      ng.appendChild(nti); gr3.appendChild(ng); body.appendChild(gr3);
+      const cb2=el('div',{class:'form-group'}); const lbl=el('label',{class:'checkbox-row'});
+      const cb=el('input',{type:'checkbox'}); cb.checked=!!editDraft.perHand; cb.onchange=()=>editDraft.perHand=cb.checked;
+      lbl.appendChild(cb); lbl.appendChild(document.createTextNode('Per hand / per side')); cb2.appendChild(lbl); body.appendChild(cb2);
+      const br=el('div',{style:'display:flex;gap:8px;flex-wrap:wrap'});
+      br.appendChild(el('button',{class:'btn primary',onclick:()=>{Object.assign(ex,editDraft);editingId=null;saveAll();render();}},['Save']));
+      br.appendChild(el('button',{class:'btn',onclick:()=>{editingId=null;render();}},['Cancel']));
+      br.appendChild(el('button',{class:'btn danger',onclick:()=>{if(!confirm(`Delete "${ex.name}"?`))return;program=program.filter(e=>e.id!==ex.id);editingId=null;saveAll();render();}},['Delete']));
+      body.appendChild(br); card.appendChild(body);
     } else {
-      const row = el('div', {class:'card-row'});
-      const info = el('div', {style:'flex:1;min-width:0'});
-      info.innerHTML = `<div style="font-weight:500;font-size:14px">${ex.name}</div><div style="font-size:12px;color:var(--text2);margin-top:2px">${formatWeightShort(ex)} &nbsp;·&nbsp; ${ex.sets}×${ex.repMin}–${ex.repMax}</div>`;
-      const actions = el('div', {style:'display:flex;gap:6px;flex-shrink:0'});
-      if (i > 0) actions.appendChild(el('button', {class:'btn sm', onclick:()=>{ const idx=program.indexOf(ex); [program[idx-1],program[idx]]=[program[idx],program[idx-1]]; saveAll(); render(); }}, ['↑']));
-      if (i < exes.length-1) actions.appendChild(el('button', {class:'btn sm', onclick:()=>{ const idx=program.indexOf(ex); [program[idx+1],program[idx]]=[program[idx],program[idx+1]]; saveAll(); render(); }}, ['↓']));
-      actions.appendChild(el('button', {class:'btn sm', onclick:()=>{ editingId=ex.id; editDraft={...ex}; render(); }}, ['Edit']));
-      row.appendChild(info); row.appendChild(actions);
-      card.appendChild(row);
+      const row=el('div',{class:'card-row'});
+      const info=el('div',{style:'flex:1;min-width:0'});
+      info.innerHTML=`<div style="font-weight:500;font-size:14px">${ex.name}</div><div style="font-size:12px;color:var(--text2);margin-top:2px">${formatWeightShort(ex)} &nbsp;·&nbsp; ${ex.sets}×${ex.repMin}–${ex.repMax}</div>`;
+      const acts=el('div',{style:'display:flex;gap:6px;flex-shrink:0'});
+      if(i>0) acts.appendChild(el('button',{class:'btn sm',onclick:()=>{const idx=program.indexOf(ex);[program[idx-1],program[idx]]=[program[idx],program[idx-1]];saveAll();render();}},['↑']));
+      if(i<exes.length-1) acts.appendChild(el('button',{class:'btn sm',onclick:()=>{const idx=program.indexOf(ex);[program[idx+1],program[idx]]=[program[idx],program[idx+1]];saveAll();render();}},['↓']));
+      acts.appendChild(el('button',{class:'btn sm',onclick:()=>{editingId=ex.id;editDraft={...ex};render();}},['Edit']));
+      row.appendChild(info); row.appendChild(acts); card.appendChild(row);
     }
     main.appendChild(card);
   });
 }
 
 // ============================================================
-// EXPORT / IMPORT
+// EXPORT / SYNC PAGE
 // ============================================================
-function downloadCSV(rows, filename) {
-  const csv = rows.map(r => r.map(v => `"${String(v).replace(/"/g,'""')}"`).join(',')).join('\n');
-  const blob = new Blob([csv], {type:'text/csv'});
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a'); a.href=url; a.download=filename; a.click();
+function downloadCSV(rows,filename){
+  const csv=rows.map(r=>r.map(v=>`"${String(v).replace(/"/g,'""')}"`).join(',')).join('\n');
+  const blob=new Blob([csv],{type:'text/csv'});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');a.href=url;a.download=filename;a.click();
   URL.revokeObjectURL(url);
 }
 
-function exportProgramCSV() {
-  const rows = [['Day','Exercise','Weight','StartRes','PerHand','Symbol','TopRep','Sets','RepMin','RepMax','Notes']];
-  program.forEach(e => rows.push([e.day,e.name,e.weight,e.startRes,e.perHand?1:0,e.symbol,e.topRep,e.sets,e.repMin,e.repMax,e.notes]));
-  downloadCSV(rows, 'workout_program.csv');
-  showMsg('Program exported', 'success');
-}
-
-function exportHistoryCSV() {
-  const rows = [['Date','Day','DayName','Exercise','Weight','Symbol','TopRep','Sets','Notes']];
-  history.forEach(h => {
-    h.exercises.forEach(e => {
-      const setsStr = (e.loggedSets||[]).map(s=>`${s.weight}×${s.reps}`).join('; ');
-      rows.push([h.date,h.day,h.dayName,e.name,e.weight,e.symbolSession||'',e.topRepSession||'',setsStr,e.sessionNotes||'']);
-    });
-  });
-  downloadCSV(rows, 'workout_history.csv');
-  showMsg('History exported', 'success');
-}
-
-function generateMarkdown() {
-  let md = '# Workout Program\n\n';
-  for (let d = 1; d <= 4; d++) {
-    md += `## Day ${d} — ${DAY_NAMES[d]}\n\n| Exercise | Weight | | Top | Sets×Range | Notes |\n|---|---|---|---|---|---|\n`;
-    program.filter(e=>e.day===d).forEach(e=>{
-      md += `| ${e.name} | ${formatWeightShort(e)} | ${e.symbol||'—'} | ${e.topRep||'—'} | ${e.sets}×${e.repMin}–${e.repMax} | ${e.notes||''} |\n`;
-    });
-    md += '\n';
-  }
-  if (navigator.clipboard) {
-    navigator.clipboard.writeText(md).then(()=>showMsg('Markdown copied','success'));
-  } else {
-    const ta = document.createElement('textarea'); ta.value=md; document.body.appendChild(ta);
-    ta.select(); document.execCommand('copy'); document.body.removeChild(ta);
-    showMsg('Markdown copied','success');
-  }
-}
-
-function importCSV(file) {
-  const reader = new FileReader();
-  reader.onload = ev => {
-    const lines = ev.target.result.split('\n').filter(l=>l.trim());
-    const parseRow = l => {
-      const cols=[]; let cur='',inQ=false;
-      for(let ch of l){ if(ch==='"') inQ=!inQ; else if(ch===','&&!inQ){cols.push(cur);cur='';} else cur+=ch; }
-      cols.push(cur); return cols.map(c=>c.trim());
-    };
-    const header = parseRow(lines[0]);
-    const imported = lines.slice(1).map(l=>{
-      const r=parseRow(l); const obj={};
-      header.forEach((h,i)=>obj[h]=r[i]);
-      return {id:Date.now()+Math.random(),day:parseInt(obj.Day)||1,name:obj.Exercise||'',weight:parseFloat(obj.Weight)||0,startRes:parseFloat(obj.StartRes)||0,perHand:obj.PerHand==='1',symbol:obj.Symbol||'',topRep:parseInt(obj.TopRep)||0,sets:parseInt(obj.Sets)||3,repMin:parseInt(obj.RepMin)||8,repMax:parseInt(obj.RepMax)||12,notes:obj.Notes||''};
-    }).filter(e=>e.name);
-    if(confirm(`Import ${imported.length} exercises? This replaces the current program.`)){
-      program=imported; saveAll(); showMsg(`Imported ${imported.length} exercises`,'success');
-    }
-  };
-  reader.readAsText(file);
-}
-
 function renderExportPage(main) {
-  main.appendChild(el('div', {class:'section-label'}, ['Cloud sync']));
-  const c0 = el('div', {class:'card card-body'});
-  const syncInfo = el('div', {style:'font-size:13px;color:var(--text2);margin-bottom:10px'});
-  syncInfo.textContent = 'Your workouts auto-sync to GitHub Gist after each session.';
-  c0.appendChild(syncInfo);
-  const syncNowBtn = el('button', {class:'btn full', onclick:async()=>{ await syncToGist(); render(); }}, ['Sync to Gist now']);
-  const loadBtn = el('button', {class:'btn full', onclick:async()=>{
-    const loaded = await loadFromGist();
-    if(loaded){ showMsg('Loaded from Gist ✓','success'); render(); }
-    else showMsg('Nothing to load from Gist','info');
-  }}, ['Load from Gist']);
-  c0.appendChild(syncNowBtn);
-  c0.appendChild(loadBtn);
-  main.appendChild(c0);
+  const hasToken = !!getGistToken();
 
-  main.appendChild(el('div', {class:'section-label'}, ['Export / Import']));
-  const c1 = el('div', {class:'card card-body'});
-  c1.appendChild(el('button', {class:'btn full', onclick:exportProgramCSV}, ['Export program CSV']));
-  c1.appendChild(el('button', {class:'btn full', onclick:exportHistoryCSV}, ['Export history CSV']));
-  c1.appendChild(el('button', {class:'btn full', onclick:generateMarkdown}, ['Copy markdown summary']));
-  const impLabel = el('div', {class:'form-label', style:'margin-top:12px'}, ['Import program CSV']);
-  const impIn = el('input', {type:'file', accept:'.csv'});
-  impIn.style.cssText='border:none;background:none;padding:0;font-size:14px;color:var(--text)';
-  impIn.onchange = e=>{ if(e.target.files[0]) importCSV(e.target.files[0]); };
-  c1.appendChild(impLabel); c1.appendChild(impIn);
-  main.appendChild(c1);
+  // Cloud sync section
+  main.appendChild(el('div',{class:'section-label'},['Cloud sync']));
+  const syncCard = el('div',{class:'card card-body'});
 
-  main.appendChild(el('div', {class:'section-label'}, ['Reset']));
-  const c2 = el('div', {class:'card card-body'});
-  c2.appendChild(el('button', {class:'btn danger full', onclick:()=>{
-    if(confirm('Reset current session?')){ session=null; saveAll(); showMsg('Session cleared','info'); }
-  }}, ['Reset current session']));
-  c2.appendChild(el('button', {class:'btn danger full', onclick:()=>{
-    if(confirm('Reset ALL data to factory defaults? Cannot be undone.')){
-      program=DEFAULT_PROGRAM.map((e,i)=>({...e,id:i}));
-      session=null; history=[]; saveAll(); showMsg('Reset to defaults','info');
+  if (hasToken) {
+    syncCard.appendChild(el('div',{style:'font-size:13px;color:var(--text2);margin-bottom:10px'},
+      ['Auto-syncs to GitHub Gist after each session.']));
+    syncCard.appendChild(el('button',{class:'btn full',onclick:async()=>{await syncToGist();render();}},['Sync now']));
+    syncCard.appendChild(el('button',{class:'btn full',onclick:async()=>{
+      const loaded=await loadFromGist();
+      if(loaded){showMsg('Loaded from Gist ✓','success');render();}
+      else showMsg('Nothing found in Gist','info');
+    }},['Load from Gist']));
+    syncCard.appendChild(el('button',{class:'btn danger full',style:'margin-top:4px',onclick:()=>{
+      if(confirm('Remove saved credentials from this device?')){clearGistCreds();showMsg('Credentials removed','info');render();}
+    }},['Disconnect Gist']));
+  } else {
+    syncCard.appendChild(el('div',{style:'font-size:13px;color:var(--text2);margin-bottom:12px'},
+      ['Connect GitHub Gist to automatically back up your workout data after every session.']));
+    syncCard.appendChild(el('button',{class:'btn primary full',onclick:()=>{
+      // Show setup inline
+      main.innerHTML='';
+      renderSetup(main);
+    }},['Set up cloud sync']));
+  }
+  main.appendChild(syncCard);
+
+  // Export
+  main.appendChild(el('div',{class:'section-label'},['Export / Import']));
+  const expCard=el('div',{class:'card card-body'});
+  expCard.appendChild(el('button',{class:'btn full',onclick:()=>{
+    const rows=[['Day','Exercise','Weight','StartRes','PerHand','Symbol','TopRep','Sets','RepMin','RepMax','Notes']];
+    program.forEach(e=>rows.push([e.day,e.name,e.weight,e.startRes,e.perHand?1:0,e.symbol,e.topRep,e.sets,e.repMin,e.repMax,e.notes]));
+    downloadCSV(rows,'workout_program.csv'); showMsg('Program exported','success');
+  }},['Export program CSV']));
+  expCard.appendChild(el('button',{class:'btn full',onclick:()=>{
+    const rows=[['Date','Day','DayName','Exercise','Weight','Symbol','TopRep','Sets','Notes']];
+    history.forEach(h=>h.exercises.forEach(e=>{
+      rows.push([h.date,h.day,h.dayName,e.name,e.weight,e.symbolSession||'',e.topRepSession||'',(e.loggedSets||[]).map(s=>`${s.weight}×${s.reps}`).join('; '),e.sessionNotes||'']);
+    }));
+    downloadCSV(rows,'workout_history.csv'); showMsg('History exported','success');
+  }},['Export history CSV']));
+  expCard.appendChild(el('button',{class:'btn full',onclick:()=>{
+    let md='# Workout Program\n\n';
+    for(let d=1;d<=4;d++){
+      md+=`## Day ${d} — ${DAY_NAMES[d]}\n\n| Exercise | Weight | | Top | Sets×Range | Notes |\n|---|---|---|---|---|---|\n`;
+      program.filter(e=>e.day===d).forEach(e=>{md+=`| ${e.name} | ${formatWeightShort(e)} | ${e.symbol||'—'} | ${e.topRep||'—'} | ${e.sets}×${e.repMin}–${e.repMax} | ${e.notes||''} |\n`;});
+      md+='\n';
     }
-  }}, ['Reset all data to defaults']));
-  main.appendChild(c2);
+    if(navigator.clipboard){navigator.clipboard.writeText(md).then(()=>showMsg('Markdown copied','success'));}
+    else{const ta=document.createElement('textarea');ta.value=md;document.body.appendChild(ta);ta.select();document.execCommand('copy');document.body.removeChild(ta);showMsg('Markdown copied','success');}
+  }},['Copy markdown summary']));
+  const impLbl=el('div',{class:'form-label',style:'margin-top:12px'},['Import program CSV']);
+  const impIn=el('input',{type:'file',accept:'.csv'});
+  impIn.style.cssText='border:none;background:none;padding:0;font-size:14px;color:var(--text)';
+  impIn.onchange=e=>{
+    if(!e.target.files[0]) return;
+    const reader=new FileReader();
+    reader.onload=ev=>{
+      const lines=ev.target.result.split('\n').filter(l=>l.trim());
+      const parseRow=l=>{const cols=[];let cur='',inQ=false;for(let ch of l){if(ch==='"')inQ=!inQ;else if(ch===','&&!inQ){cols.push(cur);cur='';}else cur+=ch;}cols.push(cur);return cols.map(c=>c.trim());};
+      const header=parseRow(lines[0]);
+      const imported=lines.slice(1).map(l=>{const r=parseRow(l);const obj={};header.forEach((h,i)=>obj[h]=r[i]);return{id:Date.now()+Math.random(),day:parseInt(obj.Day)||1,name:obj.Exercise||'',weight:parseFloat(obj.Weight)||0,startRes:parseFloat(obj.StartRes)||0,perHand:obj.PerHand==='1',symbol:obj.Symbol||'',topRep:parseInt(obj.TopRep)||0,sets:parseInt(obj.Sets)||3,repMin:parseInt(obj.RepMin)||8,repMax:parseInt(obj.RepMax)||12,notes:obj.Notes||''};}).filter(e=>e.name);
+      if(confirm(`Import ${imported.length} exercises? This replaces the current program.`)){program=imported;saveAll();showMsg(`Imported ${imported.length} exercises`,'success');}
+    };
+    reader.readAsText(e.target.files[0]);
+  };
+  expCard.appendChild(impLbl); expCard.appendChild(impIn);
+  main.appendChild(expCard);
 
-  main.appendChild(el('div', {class:'section-label'}, ['About']));
-  const c3 = el('div', {class:'card card-body'});
-  c3.innerHTML = `<div style="font-size:13px;color:var(--text2);line-height:1.6">
-    <strong style="color:var(--text)">${program.length}</strong> exercises &nbsp;·&nbsp;
-    <strong style="color:var(--text)">${history.length}</strong> sessions logged<br>
-    Auto-syncs to GitHub Gist after each workout.<br><br>
-    <strong style="color:var(--text)">To install on iPhone:</strong><br>
-    Safari → Share → "Add to Home Screen"
-  </div>`;
-  main.appendChild(c3);
+  // Reset
+  main.appendChild(el('div',{class:'section-label'},['Reset']));
+  const resetCard=el('div',{class:'card card-body'});
+  resetCard.appendChild(el('button',{class:'btn danger full',onclick:()=>{if(confirm('Reset current session?')){session=null;saveAll();showMsg('Session cleared','info');}}},['Reset current session']));
+  resetCard.appendChild(el('button',{class:'btn danger full',onclick:()=>{if(confirm('Reset ALL data to factory defaults? Cannot be undone.')){program=DEFAULT_PROGRAM.map((e,i)=>({...e,id:i}));session=null;history=[];saveAll();showMsg('Reset to defaults','info');}}},['Reset all data to defaults']));
+  main.appendChild(resetCard);
+
+  // About
+  main.appendChild(el('div',{class:'section-label'},['About']));
+  const aboutCard=el('div',{class:'card card-body'});
+  aboutCard.innerHTML=`<div style="font-size:13px;color:var(--text2);line-height:1.6"><strong style="color:var(--text)">${program.length}</strong> exercises &nbsp;·&nbsp; <strong style="color:var(--text)">${history.length}</strong> sessions logged<br>${hasToken?'Auto-syncing to GitHub Gist ✓':'Local storage only'}<br><br><strong style="color:var(--text)">To install on iPhone:</strong><br>Safari → Share → "Add to Home Screen"</div>`;
+  main.appendChild(aboutCard);
 }
 
 // ============================================================
-// INIT — load from Gist first, fall back to localStorage
+// INIT
 // ============================================================
 async function init() {
-  setSyncBar('Connecting…');
-  const loaded = await loadFromGist();
-  if (!loaded) {
-    setSyncBar('');
+  const hasToken = !!getGistToken();
+  if (hasToken) {
+    setSyncBar('Connecting…');
+    await loadFromGist();
   }
   render();
 }
