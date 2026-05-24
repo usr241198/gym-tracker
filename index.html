@@ -380,11 +380,11 @@ function render() {
   const main = document.getElementById('main');
   main.innerHTML = '';
   if (flashMsg) main.appendChild(el('div',{class:`msg ${flashType}`},[flashMsg]));
-  if (view==='dashboard')   renderDashboard(main);
+  try { if (view==='dashboard') renderDashboard(main);
   else if (view==='workout')     renderWorkout(main);
   else if (view==='summary')     renderSummary(main);
   else if (view==='editor')      renderEditor(main);
-  else if (view==='exportpage')  renderExportPage(main);
+  else if (view==='exportpage') renderExportPage(main); } catch(e) { main.innerHTML='<div class="msg error" style="margin-top:20px">Error: '+e.message+'<br><br><button class="btn" onclick="location.reload()">Reload</button></div>'; }
 }
 
 // ============================================================
@@ -436,7 +436,7 @@ function renderSetup(main) {
 // DASHBOARD
 // ============================================================
 function renderDashboard(main) {
-  main.appendChild(el('h2',{},'Choose a day'));
+  main.appendChild(el('h2',{},['Choose a day']));
   if (session&&!session.done) {
     const banner = el('div',{class:'resume-banner'});
     const info = el('div');
@@ -632,7 +632,7 @@ async function finishWorkout() {
 // SUMMARY
 // ============================================================
 function renderSummary(main) {
-  main.appendChild(el('h2',{},'Summary'));
+  main.appendChild(el('h2',{},['Summary']));
   for (let d=1;d<=4;d++) {
     main.appendChild(el('div',{class:'section-label'},[`Day ${d} — ${DAY_NAMES[d]}`]));
     const card=el('div',{class:'card',style:'overflow:auto'});
