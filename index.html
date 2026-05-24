@@ -32,93 +32,68 @@
   }
   html,body{height:100%;background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,'SF Pro Text',system-ui,sans-serif;font-size:15px;-webkit-font-smoothing:antialiased}
   body{display:flex;flex-direction:column;overflow:hidden}
-
-  /* NAV BAR */
   #topbar{background:var(--bg);border-bottom:0.5px solid var(--border);padding:12px 16px 10px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0;padding-top:calc(12px + env(safe-area-inset-top,0px))}
-  #topbar h1{font-size:17px;font-weight:600;letter-spacing:-0.3px}
-  #topbar .subtitle{font-size:12px;color:var(--text2);margin-top:1px}
-
-  /* BOTTOM NAV */
   #bottomnav{background:var(--bg);border-top:0.5px solid var(--border);display:flex;flex-shrink:0;padding-bottom:var(--safe-bottom)}
   #bottomnav button{flex:1;border:none;background:none;color:var(--text2);font-size:10px;padding:8px 4px 6px;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:3px;transition:color 0.15s}
   #bottomnav button.active{color:var(--text)}
   #bottomnav button svg{width:22px;height:22px;stroke:currentColor;fill:none;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
-
-  /* SCROLL AREA */
   #main{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:16px;padding-bottom:24px}
-
-  /* COMPONENTS */
   .card{background:var(--bg);border:0.5px solid var(--border);border-radius:var(--radius);margin-bottom:12px;overflow:hidden}
   .card-body{padding:12px 14px}
   .card-row{padding:11px 14px;border-bottom:0.5px solid var(--border);display:flex;align-items:center;justify-content:space-between;gap:8px}
   .card-row:last-child{border-bottom:none}
-
   h2{font-size:20px;font-weight:600;letter-spacing:-0.4px;margin-bottom:14px}
   h3{font-size:13px;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:0.04em;margin:18px 0 8px}
   h3:first-child{margin-top:0}
-
   button.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;font-family:inherit;font-size:14px;font-weight:500;cursor:pointer;border-radius:var(--radius-sm);padding:8px 14px;border:0.5px solid var(--border2);background:var(--bg2);color:var(--text);transition:opacity 0.15s,transform 0.1s;-webkit-tap-highlight-color:transparent}
   button.btn:active{opacity:0.7;transform:scale(0.97)}
   button.btn.primary{background:var(--text);color:var(--bg);border-color:var(--text)}
   button.btn.danger{color:var(--red-text);border-color:var(--red-text)}
   button.btn.full{width:100%;margin-bottom:8px}
   button.btn.sm{font-size:12px;padding:5px 10px}
-
   .pill{display:inline-block;font-size:11px;font-weight:600;padding:2px 8px;border-radius:20px}
   .pill.plus{background:var(--green-bg);color:var(--green-text)}
   .pill.dot{background:var(--blue-bg);color:var(--blue-text)}
   .pill.minus{background:var(--red-bg);color:var(--red-text)}
   .pill.empty{background:var(--bg2);color:var(--text3)}
-
   .tag{display:inline-block;font-size:11px;padding:1px 6px;border-radius:4px;background:var(--bg3);color:var(--text2)}
-
-  input[type=text],input[type=number],textarea,select{
+  input[type=text],input[type=number],input[type=password],textarea,select{
     font-family:inherit;font-size:15px;color:var(--text);background:var(--bg2);
     border:0.5px solid var(--border);border-radius:var(--radius-sm);
     padding:9px 11px;width:100%;outline:none;-webkit-appearance:none;
   }
-  input:focus,textarea:focus,select:focus{border-color:var(--border2)}
   textarea{resize:none;min-height:80px;line-height:1.5}
   select{cursor:pointer}
-
   .form-label{font-size:12px;color:var(--text2);margin-bottom:4px;font-weight:500}
   .form-group{margin-bottom:12px}
   .form-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
-
   table{width:100%;border-collapse:collapse;font-size:13px}
   th{font-size:11px;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:0.04em;padding:8px 10px;border-bottom:0.5px solid var(--border);text-align:left}
   td{padding:9px 10px;border-bottom:0.5px solid var(--border);vertical-align:middle;color:var(--text)}
   tr:last-child td{border-bottom:none}
-
   .progress-bar{height:3px;background:var(--bg3);border-radius:3px;margin-bottom:14px}
   .progress-fill{height:3px;background:var(--text);border-radius:3px;transition:width 0.4s ease}
-
   .day-card{display:block;width:100%;text-align:left;background:var(--bg);border:0.5px solid var(--border);border-radius:var(--radius);padding:14px;margin-bottom:10px;cursor:pointer;-webkit-tap-highlight-color:transparent;transition:background 0.15s}
   .day-card:active{background:var(--bg2)}
   .day-num{font-size:11px;color:var(--text2);font-weight:500;margin-bottom:3px}
   .day-name{font-size:16px;font-weight:600;margin-bottom:2px}
   .day-meta{font-size:12px;color:var(--text3)}
-
   .resume-banner{background:var(--bg2);border:0.5px solid var(--border);border-radius:var(--radius);padding:12px 14px;margin-bottom:14px;display:flex;align-items:center;justify-content:space-between}
-
   .ex-header{padding:12px 14px;border-bottom:0.5px solid var(--border)}
   .ex-meta{display:flex;gap:8px;flex-wrap:wrap;margin-top:6px}
-
   .set-row{display:flex;align-items:center;justify-content:space-between;padding:8px 14px;border-bottom:0.5px solid var(--border)}
   .set-row:last-child{border-bottom:none}
-
-  .msg{background:var(--bg2);border-radius:var(--radius-sm);padding:9px 12px;font-size:13px;color:var(--text2);margin-bottom:12px;text-align:center}
-
+  .msg{border-radius:var(--radius-sm);padding:9px 12px;font-size:13px;margin-bottom:12px;text-align:center}
+  .msg.info{background:var(--bg2);color:var(--text2)}
+  .msg.success{background:var(--green-bg);color:var(--green-text)}
+  .msg.error{background:var(--red-bg);color:var(--red-text)}
   .checkbox-row{display:flex;align-items:center;gap:8px;font-size:14px}
   .checkbox-row input{width:18px;height:18px;cursor:pointer;flex-shrink:0}
-
   .empty-state{text-align:center;padding:40px 20px;color:var(--text3);font-size:14px}
-
   .note-text{font-size:12px;color:var(--text2);font-style:italic;margin-top:2px}
-
-  /* Section divider label */
   .section-label{font-size:11px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:0.06em;margin:20px 0 6px;padding:0 2px}
   .section-label:first-child{margin-top:0}
+  .sync-bar{font-size:11px;color:var(--text3);text-align:center;padding:4px;flex-shrink:0}
 </style>
 </head>
 <body>
@@ -132,6 +107,7 @@
 </div>
 
 <div id="main"></div>
+<div class="sync-bar" id="sync-bar"></div>
 
 <nav id="bottomnav">
   <button onclick="setView('dashboard')" id="nav-dashboard">
@@ -158,33 +134,36 @@
 
 <script>
 // ============================================================
+// GIST CONFIG — your personal cloud backup
+// ============================================================
+const GIST_TOKEN = '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';
+const GIST_ID    = '1d12b9d8621853890757f87117ca8fc8';
+const GIST_FILE  = 'gym-tracker-data.json';
+
+// ============================================================
 // DATA MODEL
 // ============================================================
 const DAY_NAMES = ["","Upper Pull","Lower Glute Heavy","Upper Push","Lower + Core"];
 
 const DEFAULT_PROGRAM = [
-  // Day 1 — Upper Pull
   {day:1,name:"Seated row",weight:45,perHand:false,startRes:0,symbol:"•",topRep:7,sets:3,repMin:8,repMax:10,notes:""},
   {day:1,name:"Lat pulldown",weight:39,perHand:false,startRes:0,symbol:"•",topRep:10,sets:3,repMin:10,repMax:12,notes:""},
   {day:1,name:"Single-arm DB row",weight:12,perHand:true,startRes:0,symbol:"+",topRep:12,sets:3,repMin:10,repMax:12,notes:""},
   {day:1,name:"Reverse pec deck",weight:25,perHand:false,startRes:0,symbol:"•",topRep:10,sets:3,repMin:10,repMax:12,notes:""},
   {day:1,name:"Seated hammer curls",weight:5,perHand:true,startRes:0,symbol:"+",topRep:12,sets:3,repMin:8,repMax:10,notes:""},
   {day:1,name:"Cardio",weight:0,perHand:false,startRes:0,symbol:"•",topRep:0,sets:1,repMin:30,repMax:30,notes:"30–33 min, 2.23 km / 84 flights",isCardio:true},
-  // Day 2 — Lower Glute Heavy
   {day:2,name:"Hip thrust",weight:37.5,perHand:false,startRes:22.7,symbol:"+",topRep:15,sets:3,repMin:6,repMax:8,notes:""},
   {day:2,name:"Leg press",weight:110,perHand:false,startRes:75.7,symbol:"+",topRep:15,sets:3,repMin:12,repMax:15,notes:""},
   {day:2,name:"Dumbbell split squat",weight:4,perHand:false,startRes:0,symbol:"+",topRep:10,sets:3,repMin:8,repMax:10,notes:""},
   {day:2,name:"Hip abduction",weight:54,perHand:false,startRes:0,symbol:"•",topRep:15,sets:3,repMin:12,repMax:15,notes:""},
   {day:2,name:"Hip adduction",weight:36,perHand:false,startRes:0,symbol:"+",topRep:15,sets:3,repMin:12,repMax:15,notes:""},
   {day:2,name:"Cable kickback",weight:0,perHand:false,startRes:0,symbol:"",topRep:0,sets:3,repMin:12,repMax:20,notes:"2–3 × 12–20"},
-  // Day 3 — Upper Push
   {day:3,name:"Bench press",weight:0,perHand:false,startRes:0,symbol:"",topRep:0,sets:3,repMin:8,repMax:10,notes:""},
   {day:3,name:"Incline machine press",weight:15,perHand:false,startRes:6.8,symbol:"•",topRep:10,sets:3,repMin:8,repMax:10,notes:""},
   {day:3,name:"Dumbbell shoulder press",weight:8,perHand:true,startRes:0,symbol:"•",topRep:10,sets:3,repMin:8,repMax:12,notes:""},
   {day:3,name:"Lateral raises",weight:5,perHand:false,startRes:0,symbol:"•",topRep:8,sets:3,repMin:12,repMax:15,notes:""},
   {day:3,name:"Cable rope pushdown",weight:11.3,perHand:false,startRes:0,symbol:"•",topRep:12,sets:3,repMin:12,repMax:15,notes:""},
   {day:3,name:"Cardio",weight:0,perHand:false,startRes:0,symbol:"•",topRep:0,sets:1,repMin:30,repMax:30,notes:"30–33 min, 1.94–2.23 km",isCardio:true},
-  // Day 4 — Lower + Core
   {day:4,name:"Front squat",weight:20,perHand:false,startRes:0,symbol:"•",topRep:0,sets:3,repMin:3,repMax:5,notes:""},
   {day:4,name:"Cable Romanian deadlift",weight:0,perHand:false,startRes:0,symbol:"",topRep:0,sets:3,repMin:8,repMax:12,notes:""},
   {day:4,name:"Step-ups",weight:10,perHand:true,startRes:0,symbol:"+",topRep:12,sets:3,repMin:10,repMax:12,notes:""},
@@ -215,10 +194,75 @@ function saveAll() {
 }
 
 // ============================================================
+// GIST SYNC
+// ============================================================
+let syncStatus = '';
+
+function setSyncBar(msg) {
+  syncStatus = msg;
+  const bar = document.getElementById('sync-bar');
+  if (bar) bar.textContent = msg;
+}
+
+async function syncToGist() {
+  if (!GIST_TOKEN || !GIST_ID) return;
+  setSyncBar('Saving to cloud…');
+  try {
+    const data = { program, history, savedAt: new Date().toISOString() };
+    const res = await fetch(`https://api.github.com/gists/${GIST_ID}`, {
+      method: 'PATCH',
+      headers: {
+        'Authorization': `token ${GIST_TOKEN}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        files: { [GIST_FILE]: { content: JSON.stringify(data, null, 2) } }
+      })
+    });
+    if (res.ok) {
+      setSyncBar('Cloud saved ✓ ' + new Date().toLocaleTimeString('en-AU', {hour:'2-digit',minute:'2-digit'}));
+    } else {
+      setSyncBar('Cloud save failed');
+    }
+  } catch(e) {
+    setSyncBar('Cloud save failed (offline?)');
+  }
+}
+
+async function loadFromGist() {
+  if (!GIST_TOKEN || !GIST_ID) return false;
+  setSyncBar('Loading from cloud…');
+  try {
+    const res = await fetch(`https://api.github.com/gists/${GIST_ID}`, {
+      headers: { 'Authorization': `token ${GIST_TOKEN}` }
+    });
+    if (!res.ok) { setSyncBar(''); return false; }
+    const gist = await res.json();
+    const file = gist.files[GIST_FILE];
+    if (!file || !file.content || file.content.trim() === '{}') {
+      setSyncBar('');
+      return false;
+    }
+    const data = JSON.parse(file.content);
+    // Only load from Gist if it has real data
+    if (data.program && data.program.length > 0) {
+      program = data.program;
+      history = data.history || [];
+      saveAll();
+      setSyncBar('Loaded from cloud ✓');
+      return true;
+    }
+    setSyncBar('');
+    return false;
+  } catch(e) {
+    setSyncBar('');
+    return false;
+  }
+}
+
+// ============================================================
 // CORE LOGIC
 // ============================================================
-
-// Parse "45 x 10" or "45×10" lines into {weight, reps}
 function parseSetInput(input) {
   return input.trim().split('\n')
     .map(line => {
@@ -230,9 +274,6 @@ function parseSetInput(input) {
     .filter(Boolean);
 }
 
-// Find the best top set:
-// — prefers sets within rep range (highest reps, then highest weight)
-// — falls back to heaviest attempt if all sets are outside range
 function calculateTopSet(sets, repMin, repMax) {
   if (!sets || !sets.length) return null;
   const inRange = sets.filter(s => s.reps >= repMin && s.reps <= repMax);
@@ -242,12 +283,25 @@ function calculateTopSet(sets, repMin, repMax) {
   return [...sets].sort((a,b) => b.weight - a.weight || b.reps - a.reps)[0];
 }
 
-// + if top reps >= max, • if within range, - if below min
 function calculateProgression(topSet, repMin, repMax) {
   if (!topSet) return "";
   if (topSet.reps >= repMax) return "+";
   if (topSet.reps >= repMin) return "•";
   return "-";
+}
+
+// Auto weight update:
+// If top set is within or above rep range (• or +), update stored weight to what was logged.
+// If below range (−), leave stored weight unchanged — it was a failed attempt.
+function maybeUpdateWeight(ex, topSet, sym) {
+  if (!ex || !topSet) return;
+  if (ex.isCardio || ex.isTime) return;
+  if (sym === '+' || sym === '•') {
+    if (topSet.weight !== ex.weight) {
+      ex.weight = topSet.weight;
+    }
+  }
+  // sym === '-': do nothing, keep existing weight
 }
 
 function formatWeightShort(ex) {
@@ -285,6 +339,7 @@ let editorDay = 1;
 let editingId = null;
 let editDraft = {};
 let flashMsg = "";
+let flashType = "info";
 let setInputVal = "";
 
 function setView(v) {
@@ -293,10 +348,11 @@ function setView(v) {
   render();
 }
 
-function showMsg(m) {
+function showMsg(m, type='info') {
   flashMsg = m;
+  flashType = type;
   render();
-  setTimeout(() => { flashMsg = ""; render(); }, 2200);
+  setTimeout(() => { flashMsg = ""; render(); }, 2500);
 }
 
 // ============================================================
@@ -319,13 +375,11 @@ function el(tag, attrs={}, children=[]) {
 }
 
 function render() {
-  // Update nav
   ['dashboard','workout','summary','editor','exportpage'].forEach(v => {
     const b = document.getElementById('nav-'+v);
     if (b) b.className = view === v ? 'active' : '';
   });
 
-  // Topbar
   const titles = {
     dashboard: ['Gym Tracker', ''],
     workout: session && !session.done ? [`Day ${session.day} — ${DAY_NAMES[session.day]}`, ''] : ['Workout',''],
@@ -342,7 +396,7 @@ function render() {
   main.innerHTML = '';
 
   if (flashMsg) {
-    main.appendChild(el('div', {class:'msg'}, [flashMsg]));
+    main.appendChild(el('div', {class:`msg ${flashType}`}, [flashMsg]));
   }
 
   if (view === 'dashboard') renderDashboard(main);
@@ -358,7 +412,6 @@ function render() {
 function renderDashboard(main) {
   main.appendChild(el('h2', {}, ['Choose a day']));
 
-  // Resume banner
   if (session && !session.done) {
     const banner = el('div', {class:'resume-banner'});
     const info = el('div');
@@ -376,10 +429,7 @@ function renderDashboard(main) {
       ? new Date(last.date).toLocaleDateString('en-AU',{weekday:'short',day:'numeric',month:'short'})
       : 'Never';
 
-    const card = el('button', {
-      class: 'day-card',
-      onclick: () => startWorkout(d)
-    });
+    const card = el('button', {class:'day-card', onclick:()=>startWorkout(d)});
     card.innerHTML = `
       <div class="day-num">Day ${d} &nbsp;·&nbsp; ${exes.length} exercises</div>
       <div class="day-name">${DAY_NAMES[d]}</div>
@@ -410,8 +460,7 @@ function renderWorkout(main) {
   if (!session || session.done) {
     main.appendChild(el('div', {class:'empty-state'}, [
       'No active session.',
-      el('br'),
-      el('br'),
+      el('br'), el('br'),
       el('button', {class:'btn primary', onclick:()=>setView('dashboard')}, ['Choose a day'])
     ]));
     return;
@@ -419,30 +468,23 @@ function renderWorkout(main) {
 
   const dayExes = program.filter(e => e.day === session.day);
   const curEx = dayExes[session.exIndex];
-  const done = session.exIndex;
-  const total = dayExes.length;
-  const pct = Math.round(done / total * 100);
+  const pct = Math.round(session.exIndex / dayExes.length * 100);
 
-  // Progress bar
   const pb = el('div', {class:'progress-bar'});
   pb.appendChild(el('div', {class:'progress-fill', style:`width:${pct}%`}));
   main.appendChild(pb);
 
   if (curEx) {
-    // Current exercise card
     const card = el('div', {class:'card'});
-
-    // Header
     const hdr = el('div', {class:'ex-header'});
     const hdrTop = el('div', {style:'display:flex;align-items:flex-start;justify-content:space-between'});
     const nameBlock = el('div');
-    nameBlock.innerHTML = `<div style="font-size:11px;color:var(--text2);font-weight:500;margin-bottom:2px">${done+1} of ${total}</div><div style="font-size:17px;font-weight:600">${curEx.name}</div>`;
+    nameBlock.innerHTML = `<div style="font-size:11px;color:var(--text2);font-weight:500;margin-bottom:2px">${session.exIndex+1} of ${dayExes.length}</div><div style="font-size:17px;font-weight:600">${curEx.name}</div>`;
     const skipBtn = el('button', {class:'btn sm', onclick:skipExercise}, ['Skip']);
     hdrTop.appendChild(nameBlock);
     hdrTop.appendChild(skipBtn);
     hdr.appendChild(hdrTop);
 
-    // Exercise meta
     const meta = el('div', {class:'ex-meta'});
     if (!curEx.isCardio && !curEx.isTime) {
       meta.appendChild(el('span', {class:'tag'}, [formatWeightFull(curEx)]));
@@ -453,25 +495,18 @@ function renderWorkout(main) {
     hdr.appendChild(meta);
     card.appendChild(hdr);
 
-    // Logged sets
     const logged = session.loggedSets[curEx.id] || [];
-    if (logged.length > 0) {
-      logged.forEach((s, i) => {
-        const row = el('div', {class:'set-row'});
-        row.innerHTML = `<span style="font-size:13px;color:var(--text2)">Set ${i+1}</span><span style="font-weight:500">${s.weight} kg × ${s.reps}</span>`;
-        const del = el('button', {class:'btn sm danger', onclick:()=>removeSet(curEx.id, i)}, ['✕']);
-        row.appendChild(del);
-        card.appendChild(row);
-      });
-    }
-
-    // Log input
-    const inputSection = el('div', {class:'card-body'});
-
-    const inputLabel = el('div', {class:'form-label'}, ['Log sets — one per line (e.g. 45 × 10)']);
-    const ta = el('textarea', {
-      placeholder: `${curEx.weight||20} × 10\n${curEx.weight||20} × 9`,
+    logged.forEach((s, i) => {
+      const row = el('div', {class:'set-row'});
+      row.innerHTML = `<span style="font-size:13px;color:var(--text2)">Set ${i+1}</span><span style="font-weight:500">${s.weight} kg × ${s.reps}</span>`;
+      const del = el('button', {class:'btn sm danger', onclick:()=>removeSet(curEx.id, i)}, ['✕']);
+      row.appendChild(del);
+      card.appendChild(row);
     });
+
+    const inputSection = el('div', {class:'card-body'});
+    const inputLabel = el('div', {class:'form-label'}, ['Log sets — one per line (e.g. 45 × 10)']);
+    const ta = el('textarea', {placeholder:`${curEx.weight||20} × 10\n${curEx.weight||20} × 9`});
     ta.id = 'set-input';
     ta.value = setInputVal;
     ta.oninput = () => setInputVal = ta.value;
@@ -481,23 +516,19 @@ function renderWorkout(main) {
     const nextBtn = el('button', {class:'btn primary', style:'flex:1', onclick:()=>completeExercise(curEx.id)}, ['Done ›']);
     btnRow.appendChild(logBtn);
     btnRow.appendChild(nextBtn);
-
     inputSection.appendChild(inputLabel);
     inputSection.appendChild(ta);
     inputSection.appendChild(btnRow);
 
-    // Notes
     const noteLabel = el('div', {class:'form-label', style:'margin-top:12px'}, ['Notes (optional)']);
     const noteIn = el('input', {type:'text', placeholder:'e.g. left wrist irritation'});
     noteIn.value = session.notes[curEx.id] || '';
     noteIn.oninput = () => { session.notes[curEx.id] = noteIn.value; save('wt_session', session); };
     inputSection.appendChild(noteLabel);
     inputSection.appendChild(noteIn);
-
     card.appendChild(inputSection);
     main.appendChild(card);
   } else {
-    // All exercises done
     main.appendChild(el('div', {class:'card card-body', style:'text-align:center'}, [
       el('div', {style:'font-size:28px;margin-bottom:8px'}, ['✓']),
       el('div', {style:'font-weight:600;font-size:16px'}, ['All exercises logged']),
@@ -505,7 +536,6 @@ function renderWorkout(main) {
     ]));
   }
 
-  // Day notes
   const dnCard = el('div', {class:'card card-body'});
   const dnLabel = el('div', {class:'form-label'}, ['Day notes']);
   const dnIn = el('textarea');
@@ -519,7 +549,6 @@ function renderWorkout(main) {
   dnCard.appendChild(finishBtn);
   main.appendChild(dnCard);
 
-  // Exercise list
   main.appendChild(el('div', {class:'section-label'}, ['All exercises']));
   const listCard = el('div', {class:'card'});
   dayExes.forEach((e, i) => {
@@ -528,7 +557,6 @@ function renderWorkout(main) {
     const row = el('div', {class:'card-row'});
     const nameEl = el('span', {style:`font-size:14px;${isDone?'text-decoration:line-through;color:var(--text3)':''}${isCur?'font-weight:600':''}`}, [e.name]);
     row.appendChild(nameEl);
-
     const right = el('div', {style:'display:flex;align-items:center;gap:6px'});
     if (isDone) {
       const logged = session.loggedSets[e.id] || [];
@@ -552,14 +580,13 @@ function logSets(exId) {
   const ta = document.getElementById('set-input');
   if (!ta || !ta.value.trim()) return;
   const sets = parseSetInput(ta.value);
-  if (!sets.length) { showMsg("Format: 45 × 10 (one per line)"); return; }
+  if (!sets.length) { showMsg("Format: 45 × 10 (one per line)", "error"); return; }
   if (!session.loggedSets[exId]) session.loggedSets[exId] = [];
   session.loggedSets[exId].push(...sets);
   setInputVal = "";
   saveAll();
   render();
-  // Re-focus after render
-  setTimeout(() => { const ta2 = document.getElementById('set-input'); if(ta2) ta2.focus(); }, 50);
+  setTimeout(() => { const t = document.getElementById('set-input'); if(t) t.focus(); }, 50);
 }
 
 function removeSet(exId, idx) {
@@ -569,19 +596,23 @@ function removeSet(exId, idx) {
 }
 
 function completeExercise(exId) {
-  // Log any pending input first
   const ta = document.getElementById('set-input');
   if (ta && ta.value.trim()) logSets(exId);
 
   const ex = program.find(e => e.id === exId);
   const logged = session.loggedSets[exId] || [];
+
   if (ex && logged.length > 0 && !ex.isCardio && !ex.isTime) {
     const ts = calculateTopSet(logged, ex.repMin, ex.repMax);
     if (ts) {
+      const sym = calculateProgression(ts, ex.repMin, ex.repMax);
       ex.topRep = ts.reps;
-      ex.symbol = calculateProgression(ts, ex.repMin, ex.repMax);
+      ex.symbol = sym;
+      // Auto-update weight only if sets were successful (• or +)
+      maybeUpdateWeight(ex, ts, sym);
     }
   }
+
   session.exIndex++;
   setInputVal = "";
   saveAll();
@@ -595,7 +626,7 @@ function skipExercise() {
   render();
 }
 
-function finishWorkout() {
+async function finishWorkout() {
   const dayExes = program.filter(e => e.day === session.day);
   const entry = {
     date: new Date().toISOString(),
@@ -606,20 +637,16 @@ function finishWorkout() {
       const logged = session.loggedSets[e.id] || [];
       const ts = logged.length ? calculateTopSet(logged, e.repMin, e.repMax) : null;
       const sym = ts ? calculateProgression(ts, e.repMin, e.repMax) : (e.symbol || "");
-      return {
-        ...e,
-        loggedSets: logged,
-        topRepSession: ts ? ts.reps : null,
-        symbolSession: sym,
-        sessionNotes: session.notes[e.id] || ""
-      };
+      return { ...e, loggedSets:logged, topRepSession:ts?ts.reps:null, symbolSession:sym, sessionNotes:session.notes[e.id]||"" };
     })
   };
   history.push(entry);
   session.done = true;
   saveAll();
-  showMsg("Workout saved ✓");
-  setTimeout(() => setView('summary'), 800);
+  showMsg("Workout saved!", "success");
+  // Sync to Gist after finishing
+  await syncToGist();
+  setTimeout(() => setView('summary'), 1000);
 }
 
 // ============================================================
@@ -662,20 +689,18 @@ function renderSummary(main) {
         dn.innerHTML = `<span class="note-text">${entry.dayNotes}</span>`;
         card.appendChild(dn);
       }
-      entry.exercises
-        .filter(e => e.loggedSets && e.loggedSets.length > 0)
-        .forEach(e => {
-          const row = el('div', {class:'card-row'});
-          const sym = e.symbolSession || '';
-          row.innerHTML = `
-            <span style="font-size:13px">${e.name}</span>
-            <div style="display:flex;align-items:center;gap:8px">
-              <span style="font-size:12px;color:var(--text2)">${e.loggedSets.map(s=>`${s.weight}×${s.reps}`).join(', ')}</span>
-              <span class="pill ${pillClass(sym)}">${sym||'—'}</span>
-            </div>
-          `;
-          card.appendChild(row);
-        });
+      entry.exercises.filter(e => e.loggedSets && e.loggedSets.length > 0).forEach(e => {
+        const row = el('div', {class:'card-row'});
+        const sym = e.symbolSession || '';
+        row.innerHTML = `
+          <span style="font-size:13px">${e.name}</span>
+          <div style="display:flex;align-items:center;gap:8px">
+            <span style="font-size:12px;color:var(--text2)">${e.loggedSets.map(s=>`${s.weight}×${s.reps}`).join(', ')}</span>
+            <span class="pill ${pillClass(sym)}">${sym||'—'}</span>
+          </div>
+        `;
+        card.appendChild(row);
+      });
       main.appendChild(card);
     });
   }
@@ -685,130 +710,91 @@ function renderSummary(main) {
 // EDITOR
 // ============================================================
 function renderEditor(main) {
-  // Day picker
   const dayPicker = el('div', {style:'display:flex;gap:6px;margin-bottom:14px;flex-wrap:wrap'});
   for (let d = 1; d <= 4; d++) {
-    const b = el('button', {
-      class: 'btn' + (editorDay===d?' primary':''),
-      onclick: () => { editorDay = d; editingId = null; render(); }
-    }, [`Day ${d}`]);
-    dayPicker.appendChild(b);
+    dayPicker.appendChild(el('button', {
+      class:'btn'+(editorDay===d?' primary':''),
+      onclick:()=>{ editorDay=d; editingId=null; render(); }
+    }, [`Day ${d}`]));
   }
   main.appendChild(dayPicker);
 
   const exes = program.filter(e => e.day === editorDay);
-
-  const addBtn = el('button', {class:'btn full', onclick:()=>{
+  main.appendChild(el('button', {class:'btn full', onclick:()=>{
     const newId = Date.now();
     program.push({id:newId,day:editorDay,name:'New exercise',weight:0,perHand:false,startRes:0,symbol:'',topRep:0,sets:3,repMin:8,repMax:12,notes:''});
     editingId = newId;
     editDraft = {...program[program.length-1]};
     saveAll(); render();
-  }}, ['+ Add exercise']);
-  main.appendChild(addBtn);
+  }}, ['+ Add exercise']));
 
   exes.forEach((ex, i) => {
     const card = el('div', {class:'card', style:'margin-bottom:10px'});
 
     if (editingId === ex.id) {
-      // Edit form
       const body = el('div', {class:'card-body'});
       body.innerHTML = `<div style="font-weight:600;margin-bottom:12px">Editing: ${ex.name}</div>`;
 
-      function fg(label, key, type='text') {
-        const g = el('div', {class:'form-group'});
-        g.appendChild(el('div', {class:'form-label'}, [label]));
-        const inp = el('input', {type});
-        inp.value = editDraft[key] ?? '';
-        inp.oninput = () => editDraft[key] = type==='number' ? (parseFloat(inp.value)||0) : inp.value;
-        g.appendChild(inp);
-        return g;
-      }
-
       const g1 = el('div', {class:'form-group'});
       g1.appendChild(el('div', {class:'form-label'}, ['Exercise name']));
-      const nameIn = el('input', {type:'text'});
-      nameIn.value = editDraft.name || '';
+      const nameIn = el('input', {type:'text'}); nameIn.value = editDraft.name||'';
       nameIn.oninput = () => editDraft.name = nameIn.value;
-      g1.appendChild(nameIn);
-      body.appendChild(g1);
+      g1.appendChild(nameIn); body.appendChild(g1);
+
+      function numField(label, key) {
+        const g = el('div', {class:'form-group'});
+        g.appendChild(el('div', {class:'form-label'}, [label]));
+        const inp = el('input', {type:'number'}); inp.value = editDraft[key]??'';
+        inp.oninput = () => editDraft[key] = parseFloat(inp.value)||0;
+        g.appendChild(inp); return g;
+      }
 
       const grid1 = el('div', {class:'form-grid'});
-      grid1.appendChild(fg('Added weight (kg)', 'weight', 'number'));
-      grid1.appendChild(fg('Starting resistance (kg)', 'startRes', 'number'));
+      grid1.appendChild(numField('Added weight (kg)', 'weight'));
+      grid1.appendChild(numField('Starting resistance (kg)', 'startRes'));
       body.appendChild(grid1);
 
       const grid2 = el('div', {class:'form-grid'});
-      grid2.appendChild(fg('Sets', 'sets', 'number'));
-      const repGrid = el('div', {class:'form-grid'});
-      repGrid.appendChild(fg('Min reps', 'repMin', 'number'));
-      repGrid.appendChild(fg('Max reps', 'repMax', 'number'));
+      grid2.appendChild(numField('Min reps', 'repMin'));
+      grid2.appendChild(numField('Max reps', 'repMax'));
       body.appendChild(grid2);
-      body.appendChild(repGrid);
 
+      const grid3 = el('div', {class:'form-grid'});
+      grid3.appendChild(numField('Sets', 'sets'));
       const ng = el('div', {class:'form-group'});
       ng.appendChild(el('div', {class:'form-label'}, ['Notes']));
-      const noteIn = el('input', {type:'text', placeholder:'Optional notes'});
-      noteIn.value = editDraft.notes || '';
+      const noteIn = el('input', {type:'text', placeholder:'Optional'}); noteIn.value = editDraft.notes||'';
       noteIn.oninput = () => editDraft.notes = noteIn.value;
-      ng.appendChild(noteIn);
-      body.appendChild(ng);
+      ng.appendChild(noteIn); grid3.appendChild(ng);
+      body.appendChild(grid3);
 
       const cbRow = el('div', {class:'form-group'});
       const lbl = el('label', {class:'checkbox-row'});
-      const cb = el('input', {type:'checkbox'});
-      cb.checked = !!editDraft.perHand;
+      const cb = el('input', {type:'checkbox'}); cb.checked = !!editDraft.perHand;
       cb.onchange = () => editDraft.perHand = cb.checked;
-      lbl.appendChild(cb);
-      lbl.appendChild(document.createTextNode('Per hand / per side'));
-      cbRow.appendChild(lbl);
-      body.appendChild(cbRow);
+      lbl.appendChild(cb); lbl.appendChild(document.createTextNode('Per hand / per side'));
+      cbRow.appendChild(lbl); body.appendChild(cbRow);
 
       const btnRow = el('div', {style:'display:flex;gap:8px;flex-wrap:wrap'});
-      const saveBtn = el('button', {class:'btn primary', onclick:()=>{
-        Object.assign(ex, editDraft);
-        editingId = null; saveAll(); render();
-      }}, ['Save']);
-      const cancelBtn = el('button', {class:'btn', onclick:()=>{editingId=null;render()}}, ['Cancel']);
-      const delBtn = el('button', {class:'btn danger', onclick:()=>{
+      btnRow.appendChild(el('button', {class:'btn primary', onclick:()=>{ Object.assign(ex, editDraft); editingId=null; saveAll(); render(); }}, ['Save']));
+      btnRow.appendChild(el('button', {class:'btn', onclick:()=>{ editingId=null; render(); }}, ['Cancel']));
+      btnRow.appendChild(el('button', {class:'btn danger', onclick:()=>{
         if (!confirm(`Delete "${ex.name}"?`)) return;
         program = program.filter(e => e.id !== ex.id);
-        editingId = null; saveAll(); render();
-      }}, ['Delete']);
-      btnRow.appendChild(saveBtn);
-      btnRow.appendChild(cancelBtn);
-      btnRow.appendChild(delBtn);
+        editingId=null; saveAll(); render();
+      }}, ['Delete']));
       body.appendChild(btnRow);
-
       card.appendChild(body);
+
     } else {
       const row = el('div', {class:'card-row'});
       const info = el('div', {style:'flex:1;min-width:0'});
       info.innerHTML = `<div style="font-weight:500;font-size:14px">${ex.name}</div><div style="font-size:12px;color:var(--text2);margin-top:2px">${formatWeightShort(ex)} &nbsp;·&nbsp; ${ex.sets}×${ex.repMin}–${ex.repMax}</div>`;
-
       const actions = el('div', {style:'display:flex;gap:6px;flex-shrink:0'});
-      if (i > 0) {
-        const up = el('button', {class:'btn sm', onclick:()=>{
-          const idx = program.indexOf(ex);
-          [program[idx-1], program[idx]] = [program[idx], program[idx-1]];
-          saveAll(); render();
-        }}, ['↑']);
-        actions.appendChild(up);
-      }
-      if (i < exes.length-1) {
-        const dn = el('button', {class:'btn sm', onclick:()=>{
-          const idx = program.indexOf(ex);
-          [program[idx+1], program[idx]] = [program[idx], program[idx+1]];
-          saveAll(); render();
-        }}, ['↓']);
-        actions.appendChild(dn);
-      }
-      const editBtn = el('button', {class:'btn sm', onclick:()=>{
-        editingId = ex.id; editDraft = {...ex}; render();
-      }}, ['Edit']);
-      actions.appendChild(editBtn);
-      row.appendChild(info);
-      row.appendChild(actions);
+      if (i > 0) actions.appendChild(el('button', {class:'btn sm', onclick:()=>{ const idx=program.indexOf(ex); [program[idx-1],program[idx]]=[program[idx],program[idx-1]]; saveAll(); render(); }}, ['↑']));
+      if (i < exes.length-1) actions.appendChild(el('button', {class:'btn sm', onclick:()=>{ const idx=program.indexOf(ex); [program[idx+1],program[idx]]=[program[idx],program[idx+1]]; saveAll(); render(); }}, ['↓']));
+      actions.appendChild(el('button', {class:'btn sm', onclick:()=>{ editingId=ex.id; editDraft={...ex}; render(); }}, ['Edit']));
+      row.appendChild(info); row.appendChild(actions);
       card.appendChild(row);
     }
     main.appendChild(card);
@@ -818,13 +804,19 @@ function renderEditor(main) {
 // ============================================================
 // EXPORT / IMPORT
 // ============================================================
+function downloadCSV(rows, filename) {
+  const csv = rows.map(r => r.map(v => `"${String(v).replace(/"/g,'""')}"`).join(',')).join('\n');
+  const blob = new Blob([csv], {type:'text/csv'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a'); a.href=url; a.download=filename; a.click();
+  URL.revokeObjectURL(url);
+}
+
 function exportProgramCSV() {
   const rows = [['Day','Exercise','Weight','StartRes','PerHand','Symbol','TopRep','Sets','RepMin','RepMax','Notes']];
-  program.forEach(e => {
-    rows.push([e.day,e.name,e.weight,e.startRes,e.perHand?1:0,e.symbol,e.topRep,e.sets,e.repMin,e.repMax,e.notes]);
-  });
+  program.forEach(e => rows.push([e.day,e.name,e.weight,e.startRes,e.perHand?1:0,e.symbol,e.topRep,e.sets,e.repMin,e.repMax,e.notes]));
   downloadCSV(rows, 'workout_program.csv');
-  showMsg('Program exported');
+  showMsg('Program exported', 'success');
 }
 
 function exportHistoryCSV() {
@@ -836,113 +828,88 @@ function exportHistoryCSV() {
     });
   });
   downloadCSV(rows, 'workout_history.csv');
-  showMsg('History exported');
-}
-
-function downloadCSV(rows, filename) {
-  const csv = rows.map(r => r.map(v => `"${String(v).replace(/"/g,'""')}"`).join(',')).join('\n');
-  const blob = new Blob([csv], {type:'text/csv'});
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url; a.download = filename; a.click();
-  URL.revokeObjectURL(url);
-}
-
-function importCSV(file) {
-  const reader = new FileReader();
-  reader.onload = ev => {
-    const text = ev.target.result;
-    const lines = text.split('\n').filter(l => l.trim());
-    const parseRow = l => {
-      const cols = []; let cur='', inQ=false;
-      for (let ch of l) {
-        if (ch==='"') inQ=!inQ;
-        else if (ch===',' && !inQ) { cols.push(cur); cur=''; }
-        else cur += ch;
-      }
-      cols.push(cur);
-      return cols.map(c => c.trim());
-    };
-    const header = parseRow(lines[0]);
-    const imported = lines.slice(1).map(l => {
-      const r = parseRow(l);
-      const obj = {};
-      header.forEach((h,i) => obj[h] = r[i]);
-      return {
-        id: Date.now()+Math.random(),
-        day: parseInt(obj.Day)||1,
-        name: obj.Exercise||'',
-        weight: parseFloat(obj.Weight)||0,
-        startRes: parseFloat(obj.StartRes)||0,
-        perHand: obj.PerHand==='1',
-        symbol: obj.Symbol||'',
-        topRep: parseInt(obj.TopRep)||0,
-        sets: parseInt(obj.Sets)||3,
-        repMin: parseInt(obj.RepMin)||8,
-        repMax: parseInt(obj.RepMax)||12,
-        notes: obj.Notes||''
-      };
-    }).filter(e => e.name);
-    if (confirm(`Import ${imported.length} exercises? This replaces the current program.`)) {
-      program = imported; saveAll(); showMsg(`Imported ${imported.length} exercises`);
-    }
-  };
-  reader.readAsText(file);
+  showMsg('History exported', 'success');
 }
 
 function generateMarkdown() {
   let md = '# Workout Program\n\n';
   for (let d = 1; d <= 4; d++) {
-    md += `## Day ${d} — ${DAY_NAMES[d]}\n\n`;
-    md += '| Exercise | Weight | | Top | Sets×Range | Notes |\n';
-    md += '|---|---|---|---|---|---|\n';
-    program.filter(e => e.day===d).forEach(e => {
+    md += `## Day ${d} — ${DAY_NAMES[d]}\n\n| Exercise | Weight | | Top | Sets×Range | Notes |\n|---|---|---|---|---|---|\n`;
+    program.filter(e=>e.day===d).forEach(e=>{
       md += `| ${e.name} | ${formatWeightShort(e)} | ${e.symbol||'—'} | ${e.topRep||'—'} | ${e.sets}×${e.repMin}–${e.repMax} | ${e.notes||''} |\n`;
     });
     md += '\n';
   }
   if (navigator.clipboard) {
-    navigator.clipboard.writeText(md).then(() => showMsg('Markdown copied'));
+    navigator.clipboard.writeText(md).then(()=>showMsg('Markdown copied','success'));
   } else {
-    const ta = document.createElement('textarea');
-    ta.value = md; document.body.appendChild(ta);
-    ta.select(); document.execCommand('copy');
-    document.body.removeChild(ta);
-    showMsg('Markdown copied');
+    const ta = document.createElement('textarea'); ta.value=md; document.body.appendChild(ta);
+    ta.select(); document.execCommand('copy'); document.body.removeChild(ta);
+    showMsg('Markdown copied','success');
   }
 }
 
+function importCSV(file) {
+  const reader = new FileReader();
+  reader.onload = ev => {
+    const lines = ev.target.result.split('\n').filter(l=>l.trim());
+    const parseRow = l => {
+      const cols=[]; let cur='',inQ=false;
+      for(let ch of l){ if(ch==='"') inQ=!inQ; else if(ch===','&&!inQ){cols.push(cur);cur='';} else cur+=ch; }
+      cols.push(cur); return cols.map(c=>c.trim());
+    };
+    const header = parseRow(lines[0]);
+    const imported = lines.slice(1).map(l=>{
+      const r=parseRow(l); const obj={};
+      header.forEach((h,i)=>obj[h]=r[i]);
+      return {id:Date.now()+Math.random(),day:parseInt(obj.Day)||1,name:obj.Exercise||'',weight:parseFloat(obj.Weight)||0,startRes:parseFloat(obj.StartRes)||0,perHand:obj.PerHand==='1',symbol:obj.Symbol||'',topRep:parseInt(obj.TopRep)||0,sets:parseInt(obj.Sets)||3,repMin:parseInt(obj.RepMin)||8,repMax:parseInt(obj.RepMax)||12,notes:obj.Notes||''};
+    }).filter(e=>e.name);
+    if(confirm(`Import ${imported.length} exercises? This replaces the current program.`)){
+      program=imported; saveAll(); showMsg(`Imported ${imported.length} exercises`,'success');
+    }
+  };
+  reader.readAsText(file);
+}
+
 function renderExportPage(main) {
-  main.appendChild(el('div', {class:'section-label'}, ['Program data']));
+  main.appendChild(el('div', {class:'section-label'}, ['Cloud sync']));
+  const c0 = el('div', {class:'card card-body'});
+  const syncInfo = el('div', {style:'font-size:13px;color:var(--text2);margin-bottom:10px'});
+  syncInfo.textContent = 'Your workouts auto-sync to GitHub Gist after each session.';
+  c0.appendChild(syncInfo);
+  const syncNowBtn = el('button', {class:'btn full', onclick:async()=>{ await syncToGist(); render(); }}, ['Sync to Gist now']);
+  const loadBtn = el('button', {class:'btn full', onclick:async()=>{
+    const loaded = await loadFromGist();
+    if(loaded){ showMsg('Loaded from Gist ✓','success'); render(); }
+    else showMsg('Nothing to load from Gist','info');
+  }}, ['Load from Gist']);
+  c0.appendChild(syncNowBtn);
+  c0.appendChild(loadBtn);
+  main.appendChild(c0);
+
+  main.appendChild(el('div', {class:'section-label'}, ['Export / Import']));
   const c1 = el('div', {class:'card card-body'});
   c1.appendChild(el('button', {class:'btn full', onclick:exportProgramCSV}, ['Export program CSV']));
   c1.appendChild(el('button', {class:'btn full', onclick:exportHistoryCSV}, ['Export history CSV']));
   c1.appendChild(el('button', {class:'btn full', onclick:generateMarkdown}, ['Copy markdown summary']));
-
   const impLabel = el('div', {class:'form-label', style:'margin-top:12px'}, ['Import program CSV']);
   const impIn = el('input', {type:'file', accept:'.csv'});
-  impIn.style.cssText = 'border:none;background:none;padding:0;font-size:14px;color:var(--text)';
-  impIn.onchange = e => { if (e.target.files[0]) importCSV(e.target.files[0]); };
-  c1.appendChild(impLabel);
-  c1.appendChild(impIn);
+  impIn.style.cssText='border:none;background:none;padding:0;font-size:14px;color:var(--text)';
+  impIn.onchange = e=>{ if(e.target.files[0]) importCSV(e.target.files[0]); };
+  c1.appendChild(impLabel); c1.appendChild(impIn);
   main.appendChild(c1);
 
   main.appendChild(el('div', {class:'section-label'}, ['Reset']));
   const c2 = el('div', {class:'card card-body'});
-  const r1 = el('button', {class:'btn danger full', onclick:()=>{
-    if (confirm('Reset current session? Logged sets will be lost.')) {
-      session = null; saveAll(); showMsg('Session cleared');
+  c2.appendChild(el('button', {class:'btn danger full', onclick:()=>{
+    if(confirm('Reset current session?')){ session=null; saveAll(); showMsg('Session cleared','info'); }
+  }}, ['Reset current session']));
+  c2.appendChild(el('button', {class:'btn danger full', onclick:()=>{
+    if(confirm('Reset ALL data to factory defaults? Cannot be undone.')){
+      program=DEFAULT_PROGRAM.map((e,i)=>({...e,id:i}));
+      session=null; history=[]; saveAll(); showMsg('Reset to defaults','info');
     }
-  }}, ['Reset current session']);
-  const r2 = el('button', {class:'btn danger full', onclick:()=>{
-    if (confirm('Reset ALL data to factory defaults? This cannot be undone.')) {
-      program = DEFAULT_PROGRAM.map((e,i)=>({...e,id:i}));
-      session = null; history = [];
-      saveAll(); showMsg('Reset to defaults');
-    }
-  }}, ['Reset all data to defaults']);
-  c2.appendChild(r1);
-  c2.appendChild(r2);
+  }}, ['Reset all data to defaults']));
   main.appendChild(c2);
 
   main.appendChild(el('div', {class:'section-label'}, ['About']));
@@ -950,17 +917,26 @@ function renderExportPage(main) {
   c3.innerHTML = `<div style="font-size:13px;color:var(--text2);line-height:1.6">
     <strong style="color:var(--text)">${program.length}</strong> exercises &nbsp;·&nbsp;
     <strong style="color:var(--text)">${history.length}</strong> sessions logged<br>
-    Data saved in browser storage on this device.<br><br>
-    <strong style="color:var(--text)">To install as app on iPhone:</strong><br>
-    Open in Safari → Share button → "Add to Home Screen"
+    Auto-syncs to GitHub Gist after each workout.<br><br>
+    <strong style="color:var(--text)">To install on iPhone:</strong><br>
+    Safari → Share → "Add to Home Screen"
   </div>`;
   main.appendChild(c3);
 }
 
 // ============================================================
-// INIT
+// INIT — load from Gist first, fall back to localStorage
 // ============================================================
-render();
+async function init() {
+  setSyncBar('Connecting…');
+  const loaded = await loadFromGist();
+  if (!loaded) {
+    setSyncBar('');
+  }
+  render();
+}
+
+init();
 </script>
 </body>
 </html>
