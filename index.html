@@ -443,7 +443,14 @@ function renderDashboard(main) {
     const info = el('div');
     info.innerHTML = `<div style="font-weight:600;font-size:14px">Active: Day ${session.day}</div><div style="font-size:12px;color:var(--text2);margin-top:2px">${DAY_NAMES[session.day]}</div>`;
     banner.appendChild(info);
-    banner.appendChild(el('button',{class:'btn primary',onclick:()=>setView('workout')},['Resume']));
+    const bannerBtns = el('div',{style:'display:flex;gap:8px'});
+    bannerBtns.appendChild(el('button',{class:'btn primary',onclick:()=>setView('workout')},['Resume']));
+    bannerBtns.appendChild(el('button',{class:'btn danger',onclick:()=>{
+      if(confirm('Cancel this workout? All logged sets will be lost.')) {
+        session=null; saveAll(); setInputVal=""; render();
+      }
+    }},['Cancel']));
+    banner.appendChild(bannerBtns);
     main.appendChild(banner);
   }
   for (let d=1;d<=4;d++) {
@@ -577,6 +584,14 @@ function renderWorkout(main) {
     listCard.appendChild(row);
   });
   main.appendChild(listCard);
+
+  // Cancel button — all the way at the bottom, below exercise list
+  const cancelBtn = el('button',{class:'btn danger full',style:'margin-top:8px',onclick:()=>{
+    if(confirm('Cancel this workout? All logged sets will be lost.')) {
+      session=null; saveAll(); setInputVal=""; setView('dashboard');
+    }
+  }},['Cancel workout']);
+  main.appendChild(cancelBtn);
 }
 
 function logSets(exId) {
