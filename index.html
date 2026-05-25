@@ -494,7 +494,14 @@ function renderWorkout(main) {
     const nameBlock = el('div');
     nameBlock.innerHTML=`<div style="font-size:11px;color:var(--text2);font-weight:500;margin-bottom:2px">${session.exIndex+1} of ${dayExes.length}</div><div style="font-size:17px;font-weight:600">${curEx.name}</div>`;
     hdrTop.appendChild(nameBlock);
-    hdrTop.appendChild(el('button',{class:'btn sm',onclick:skipExercise},['Skip']));
+    const hdrBtns = el('div',{style:'display:flex;gap:6px'});
+    if (session.exIndex > 0) {
+      hdrBtns.appendChild(el('button',{class:'btn sm',onclick:()=>{
+        setInputVal=""; session.exIndex--; saveAll(); render();
+      }},['← Back']));
+    }
+    hdrBtns.appendChild(el('button',{class:'btn sm',onclick:skipExercise},['Skip']));
+    hdrTop.appendChild(hdrBtns);
     hdr.appendChild(hdrTop);
     const meta = el('div',{class:'ex-meta'});
     if (!curEx.isCardio&&!curEx.isTime) meta.appendChild(el('span',{class:'tag'},[formatWeightFull(curEx)]));
@@ -514,7 +521,7 @@ function renderWorkout(main) {
 
     const body = el('div',{class:'card-body'});
     body.appendChild(el('div',{class:'form-label'},['Log sets — one per line (e.g. 45 × 10)']));
-    const ta = el('textarea',{placeholder:`${curEx.weight||20} × 10\n${curEx.weight||20} × 9`});
+    const ta = el('textarea',{placeholder:`weight × reps\ne.g. 45 × 10`});
     ta.id='set-input'; ta.value=setInputVal;
     ta.oninput=()=>setInputVal=ta.value;
     body.appendChild(ta);
@@ -576,7 +583,7 @@ function logSets(exId) {
   const ta=document.getElementById('set-input');
   if (!ta||!ta.value.trim()) return;
   const sets=parseSetInput(ta.value);
-  if (!sets.length){showMsg("Format: 45 × 10 (one per line)","error");return;}
+  if (!sets.length){showMsg("Format: 20 × 10  (weight × reps, one per line). Use 0 if no extra weight.","error");return;}
   if (!session.loggedSets[exId]) session.loggedSets[exId]=[];
   session.loggedSets[exId].push(...sets);
   setInputVal=""; saveAll(); render();
@@ -590,7 +597,18 @@ function removeSet(exId,idx) {
 
 function completeExercise(exId) {
   const ta=document.getElementById('set-input');
-  if (ta&&ta.value.trim()) logSets(exId);
+  // If there is text in the input box, try to parse it first.
+  // If it fails to parse, block advancing and show an error.
+  if (ta && ta.value.trim()) {
+    const sets = parseSetInput(ta.value);
+    if (!sets.length) {
+      showMsg("Fix format first: e.g. 20 × 10 (weight × reps)", "error");
+      return; // Stay on this exercise — do not advance
+    }
+    if (!session.loggedSets[exId]) session.loggedSets[exId]=[];
+    session.loggedSets[exId].push(...sets);
+    setInputVal="";
+  }
   const ex=program.find(e=>e.id===exId);
   const logged=session.loggedSets[exId]||[];
   if (ex&&logged.length>0&&!ex.isCardio&&!ex.isTime) {
