@@ -146,31 +146,28 @@
 const DAY_NAMES = ["","Upper Pull","Lower Glute Heavy","Upper Push","Lower + Core"];
 
 const DEFAULT_PROGRAM = [
-  {day:1,name:"Seated row",weight:45,perHand:false,startRes:0,symbol:"•",topRep:7,sets:3,repMin:8,repMax:10,notes:""},
-  {day:1,name:"Lat pulldown",weight:39,perHand:false,startRes:0,symbol:"•",topRep:10,sets:3,repMin:10,repMax:12,notes:""},
-  {day:1,name:"Single-arm DB row",weight:12,perHand:true,startRes:0,symbol:"+",topRep:12,sets:3,repMin:10,repMax:12,notes:""},
-  {day:1,name:"Reverse pec deck",weight:25,perHand:false,startRes:0,symbol:"•",topRep:10,sets:3,repMin:10,repMax:12,notes:""},
-  {day:1,name:"Seated hammer curls",weight:5,perHand:true,startRes:0,symbol:"+",topRep:12,sets:3,repMin:8,repMax:10,notes:""},
-  {day:1,name:"Cardio",weight:0,perHand:false,startRes:0,symbol:"•",topRep:0,sets:1,repMin:30,repMax:30,notes:"30–33 min, 2.23 km / 84 flights",isCardio:true},
-  {day:2,name:"Hip thrust",weight:37.5,perHand:false,startRes:22.7,symbol:"+",topRep:15,sets:3,repMin:6,repMax:8,notes:""},
-  {day:2,name:"Leg press",weight:110,perHand:false,startRes:75.7,symbol:"+",topRep:15,sets:3,repMin:12,repMax:15,notes:""},
-  {day:2,name:"Dumbbell split squat",weight:4,perHand:false,startRes:0,symbol:"+",topRep:10,sets:3,repMin:8,repMax:10,notes:""},
-  {day:2,name:"Hip abduction",weight:54,perHand:false,startRes:0,symbol:"•",topRep:15,sets:3,repMin:12,repMax:15,notes:""},
-  {day:2,name:"Hip adduction",weight:36,perHand:false,startRes:0,symbol:"+",topRep:15,sets:3,repMin:12,repMax:15,notes:""},
-  {day:2,name:"Cable kickback",weight:0,perHand:false,startRes:0,symbol:"",topRep:0,sets:3,repMin:12,repMax:20,notes:"2–3 × 12–20"},
-  {day:3,name:"Bench press",weight:0,perHand:false,startRes:0,symbol:"",topRep:0,sets:3,repMin:8,repMax:10,notes:""},
-  {day:3,name:"Incline machine press",weight:15,perHand:false,startRes:6.8,symbol:"•",topRep:10,sets:3,repMin:8,repMax:10,notes:""},
-  {day:3,name:"Dumbbell shoulder press",weight:8,perHand:true,startRes:0,symbol:"•",topRep:10,sets:3,repMin:8,repMax:12,notes:""},
-  {day:3,name:"Lateral raises",weight:5,perHand:false,startRes:0,symbol:"•",topRep:8,sets:3,repMin:12,repMax:15,notes:""},
-  {day:3,name:"Cable rope pushdown",weight:11.3,perHand:false,startRes:0,symbol:"•",topRep:12,sets:3,repMin:12,repMax:15,notes:""},
-  {day:3,name:"Cardio",weight:0,perHand:false,startRes:0,symbol:"•",topRep:0,sets:1,repMin:30,repMax:30,notes:"30–33 min, 1.94–2.23 km",isCardio:true},
-  {day:4,name:"Front squat",weight:20,perHand:false,startRes:0,symbol:"•",topRep:0,sets:3,repMin:3,repMax:5,notes:""},
-  {day:4,name:"Cable Romanian deadlift",weight:0,perHand:false,startRes:0,symbol:"",topRep:0,sets:3,repMin:8,repMax:12,notes:""},
-  {day:4,name:"Step-ups",weight:10,perHand:true,startRes:0,symbol:"+",topRep:12,sets:3,repMin:10,repMax:12,notes:""},
-  {day:4,name:"Prone leg curl",weight:27,perHand:false,startRes:0,symbol:"+",topRep:12,sets:3,repMin:10,repMax:12,notes:""},
-  {day:4,name:"Dead bugs",weight:5,perHand:false,startRes:0,symbol:"+",topRep:12,sets:3,repMin:10,repMax:12,notes:""},
-  {day:4,name:"Pallof press",weight:9,perHand:false,startRes:0,symbol:"+",topRep:15,sets:3,repMin:10,repMax:15,notes:""},
-  {day:4,name:"Plank",weight:0,perHand:false,startRes:0,symbol:"•",topRep:47,sets:3,repMin:45,repMax:75,notes:"seconds",isTime:true},
+  // Day 1 — Upper Pull
+  {day:1,name:"Deadlift",weight:20,perHand:false,startRes:0,symbol:"",topRep:0,sets:3,repMin:3,repMax:5,notes:"Barbell"},
+  {day:1,name:"Assisted pullups",weight:0,perHand:false,startRes:0,symbol:"",topRep:0,sets:2,repMin:6,repMax:8,notes:"Update resistance in Edit"},
+  {day:1,name:"Single-arm DB row",weight:12,perHand:true,startRes:0,symbol:"",topRep:0,sets:3,repMin:8,repMax:10,notes:""},
+  {day:1,name:"Reverse pec deck",weight:25,perHand:false,startRes:0,symbol:"",topRep:0,sets:3,repMin:10,repMax:12,notes:""},
+  // Day 2 — Lower Glute Heavy
+  {day:2,name:"Hip thrust",weight:37.5,perHand:false,startRes:22.7,symbol:"",topRep:0,sets:3,repMin:6,repMax:8,notes:""},
+  {day:2,name:"Leg press",weight:110,perHand:false,startRes:75.7,symbol:"",topRep:0,sets:3,repMin:18,repMax:20,notes:""},
+  {day:2,name:"Prone leg curl",weight:27,perHand:false,startRes:0,symbol:"",topRep:0,sets:3,repMin:10,repMax:12,notes:""},
+  {day:2,name:"Hip abduction",weight:54,perHand:false,startRes:0,symbol:"",topRep:0,sets:3,repMin:13,repMax:15,notes:""},
+  {day:2,name:"Hip adduction",weight:36,perHand:false,startRes:0,symbol:"",topRep:0,sets:3,repMin:13,repMax:15,notes:""},
+  // Day 3 — Upper Push
+  {day:3,name:"Bench press",weight:20,perHand:false,startRes:0,symbol:"",topRep:0,sets:3,repMin:8,repMax:10,notes:""},
+  {day:3,name:"Dumbbell shoulder press",weight:8,perHand:true,startRes:0,symbol:"",topRep:0,sets:3,repMin:8,repMax:10,notes:""},
+  {day:3,name:"Upright row",weight:3,perHand:true,startRes:0,symbol:"",topRep:0,sets:3,repMin:8,repMax:10,notes:""},
+  {day:3,name:"Cable rope pushdown",weight:11.3,perHand:false,startRes:0,symbol:"",topRep:0,sets:2,repMin:10,repMax:12,notes:""},
+  // Day 4 — Lower + Core
+  {day:4,name:"Front squat",weight:20,perHand:false,startRes:0,symbol:"",topRep:0,sets:3,repMin:3,repMax:5,notes:"Barbell"},
+  {day:4,name:"GHD",weight:0,perHand:false,startRes:0,symbol:"",topRep:0,sets:3,repMin:8,repMax:10,notes:""},
+  {day:4,name:"Dead bugs",weight:0,perHand:false,startRes:0,symbol:"",topRep:0,sets:3,repMin:6,repMax:8,notes:"Per side"},
+  {day:4,name:"Cable ax chop",weight:0,perHand:false,startRes:0,symbol:"",topRep:0,sets:2,repMin:10,repMax:12,notes:"High to low"},
+  {day:4,name:"Plank",weight:0,perHand:false,startRes:0,symbol:"",topRep:0,sets:2,repMin:45,repMax:60,notes:"seconds",isTime:true},
 ];
 
 // ============================================================
@@ -436,6 +433,13 @@ function renderSetup(main) {
 // ============================================================
 // DASHBOARD
 // ============================================================
+function getNextDay() {
+  // Return the next day in rotation based on last completed session (1→2→3→4→1)
+  if (!history.length) return 1;
+  const last = history[history.length - 1];
+  return (last.day % 4) + 1;
+}
+
 function renderDashboard(main) {
   main.appendChild(el('h2',{},['Choose a day']));
   if (session&&!session.done) {
@@ -453,12 +457,25 @@ function renderDashboard(main) {
     banner.appendChild(bannerBtns);
     main.appendChild(banner);
   }
+
+  const nextDay = getNextDay();
+
   for (let d=1;d<=4;d++) {
     const exes = program.filter(e=>e.day===d);
     const last = history.filter(h=>h.day===d).slice(-1)[0];
     const lastDate = last ? new Date(last.date).toLocaleDateString('en-AU',{weekday:'short',day:'numeric',month:'short'}) : 'Never';
-    const card = el('button',{class:'day-card',onclick:()=>startWorkout(d)});
-    card.innerHTML=`<div class="day-num">Day ${d} &nbsp;·&nbsp; ${exes.length} exercises</div><div class="day-name">${DAY_NAMES[d]}</div><div class="day-meta">Last: ${lastDate}</div>`;
+    const isNext = d === nextDay;
+
+    const card = el('button',{
+      class:'day-card',
+      onclick:()=>startWorkout(d),
+      style: isNext ? 'border-color:var(--border2);' : 'opacity:0.4;'
+    });
+
+    const badge = isNext
+      ? `<span style="font-size:11px;font-weight:600;color:var(--green-text);background:var(--green-bg);padding:2px 8px;border-radius:20px;margin-left:6px">Up next</span>`
+      : '';
+    card.innerHTML=`<div class="day-num">Day ${d} &nbsp;·&nbsp; ${exes.length} exercises${badge}</div><div class="day-name">${DAY_NAMES[d]}</div><div class="day-meta">Last: ${lastDate}</div>`;
     main.appendChild(card);
   }
 }
@@ -690,9 +707,16 @@ function renderSummary(main) {
       card.appendChild(hdr);
       if (entry.dayNotes){const dn=el('div',{class:'card-row'});dn.innerHTML=`<span class="note-text">${entry.dayNotes}</span>`;card.appendChild(dn);}
       entry.exercises.filter(e=>e.loggedSets&&e.loggedSets.length>0).forEach(e=>{
-        const row=el('div',{class:'card-row'});
+        const row=el('div',{class:'card-row',style:'flex-direction:column;align-items:flex-start;gap:4px'});
         const sym=e.symbolSession||'';
-        row.innerHTML=`<span style="font-size:13px">${e.name}</span><div style="display:flex;align-items:center;gap:8px"><span style="font-size:12px;color:var(--text2)">${e.loggedSets.map(s=>`${s.weight}×${s.reps}`).join(', ')}</span><span class="pill ${pillClass(sym)}">${sym||'—'}</span></div>`;
+        const topLine=el('div',{style:'display:flex;justify-content:space-between;width:100%;align-items:center'});
+        topLine.innerHTML=`<span style="font-size:13px;font-weight:500">${e.name}</span><div style="display:flex;align-items:center;gap:8px"><span style="font-size:12px;color:var(--text2)">${e.loggedSets.map(s=>`${s.weight}×${s.reps}`).join(', ')}</span><span class="pill ${pillClass(sym)}">${sym||'—'}</span></div>`;
+        row.appendChild(topLine);
+        if(e.sessionNotes){
+          const noteEl=el('div',{style:'font-size:12px;color:var(--text2);font-style:italic'});
+          noteEl.textContent=e.sessionNotes;
+          row.appendChild(noteEl);
+        }
         card.appendChild(row);
       });
       main.appendChild(card);
