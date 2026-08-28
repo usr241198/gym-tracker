@@ -95,6 +95,8 @@
   .section-label{font-size:11px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:0.06em;margin:20px 0 6px;padding:0 2px}
   .section-label:first-child{margin-top:0}
   .sync-bar{font-size:11px;color:var(--text3);text-align:center;padding:4px;flex-shrink:0;min-height:20px}
+  .day-name-input{border:none;background:none;padding:4px 0;font-weight:500;font-size:15px;width:auto;flex:1;min-width:0}
+  .day-name-input:focus{background:var(--bg2);border-radius:6px;padding:4px 6px}
   /* Setup screen */
   .setup-wrap{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:60vh;padding:24px}
   .setup-card{background:var(--bg);border:0.5px solid var(--border);border-radius:var(--radius);padding:20px;width:100%;max-width:400px}
@@ -143,7 +145,13 @@
 // ============================================================
 // DATA MODEL
 // ============================================================
-const DAY_NAMES = ["","Upper Pull","Lower Glute Heavy","Upper Push","Lower + Core"];
+const DEFAULT_DAYS = [
+  {id:1,name:"Upper Pull"},
+  {id:2,name:"Lower Glute Heavy"},
+  {id:3,name:"Upper Push"},
+  {id:4,name:"Lower + Core"},
+  {id:5,name:"Core"},
+];
 
 const DEFAULT_PROGRAM = [
   // Day 1 — Upper Pull
@@ -168,6 +176,12 @@ const DEFAULT_PROGRAM = [
   {day:4,name:"Dead bugs",weight:0,perHand:false,startRes:0,symbol:"",topRep:0,sets:3,repMin:6,repMax:8,notes:"Per side"},
   {day:4,name:"Cable ax chop",weight:0,perHand:false,startRes:0,symbol:"",topRep:0,sets:2,repMin:10,repMax:12,notes:"High to low"},
   {day:4,name:"Plank",weight:0,perHand:false,startRes:0,symbol:"",topRep:0,sets:2,repMin:45,repMax:60,notes:"seconds",isTime:true},
+  // Day 5 — Core
+  {day:5,name:"Standing ab marches",weight:0,perHand:false,startRes:0,symbol:"",topRep:0,sets:3,repMin:12,repMax:16,notes:"Per side"},
+  {day:5,name:"Standing halos",weight:0,perHand:false,startRes:0,symbol:"",topRep:0,sets:3,repMin:8,repMax:10,notes:"Each direction"},
+  {day:5,name:"Reverse plank",weight:0,perHand:false,startRes:0,symbol:"",topRep:0,sets:2,repMin:20,repMax:30,notes:"seconds",isTime:true},
+  {day:5,name:"Reverse knee tucks",weight:0,perHand:false,startRes:0,symbol:"",topRep:0,sets:3,repMin:10,repMax:12,notes:"Hanging or lying"},
+  {day:5,name:"Bear holds",weight:0,perHand:false,startRes:0,symbol:"",topRep:0,sets:2,repMin:20,repMax:30,notes:"seconds",isTime:true},
 ];
 
 // ============================================================
@@ -194,14 +208,57 @@ function clearGistCreds() {
 
 const GIST_FILE = 'gym-tracker-data.json';
 
-let program = load('wt_program', DEFAULT_PROGRAM.map((e,i) => ({...e, id:i})));
+let days     = load('wt_days', DEFAULT_DAYS);
+let program  = load('wt_program', DEFAULT_PROGRAM.map((e,i) => ({...e, id:i})));
 let session  = load('wt_session', null);
 let history  = load('wt_history', []);
+// The order workouts are suggested in. A plain list of day ids — can repeat
+// a day more than once (e.g. Upper, Lower, Upper, Core) and doesn't have to
+// match the order days are listed/edited in.
+let rotation = load('wt_rotation', days.map(d=>d.id));
 
 function saveAll() {
+  save('wt_days', days);
   save('wt_program', program);
   save('wt_session', session);
   save('wt_history', history);
+  save('wt_rotation', rotation);
+}
+
+// ============================================================
+// DAY HELPERS
+// ============================================================
+function dayName(id) {
+  const d = days.find(x=>x.id===id);
+  return d ? d.name : 'Unknown day';
+}
+function dayLabelById(id) {
+  const idx = days.findIndex(x=>x.id===id);
+  return idx===-1 ? 'Day ?' : `Day ${idx+1}`;
+}
+function nextDayId() {
+  const maxId = days.length ? Math.max(...days.map(d=>d.id)) : 0;
+  return maxId + 1;
+}
+function addDay() {
+  const id = nextDayId();
+  days.push({id, name:'New day'});
+  editorDay = id;
+  saveAll(); render();
+}
+function removeDay(id) {
+  if (days.length<=1) { showMsg('You need at least one day','error'); return; }
+  const exCount = program.filter(e=>e.day===id).length;
+  const msg = exCount>0
+    ? `Delete "${dayName(id)}" and its ${exCount} exercise(s)? This cannot be undone.`
+    : `Delete "${dayName(id)}"?`;
+  if (!confirm(msg)) return;
+  days = days.filter(d=>d.id!==id);
+  program = program.filter(e=>e.day!==id);
+  rotation = rotation.filter(rid=>rid!==id);
+  if (session && session.day===id) session = null;
+  if (editorDay===id) editorDay = days[0].id;
+  saveAll(); render();
 }
 
 // ============================================================
@@ -218,7 +275,7 @@ async function syncToGist() {
   if (!token || !gistId) return;
   setSyncBar('Saving to cloud…');
   try {
-    const data = { program, history, savedAt: new Date().toISOString() };
+    const data = { days, program, history, rotation, savedAt: new Date().toISOString() };
     const res = await fetch(`https://api.github.com/gists/${gistId}`, {
       method: 'PATCH',
       headers: { 'Authorization': `token ${token}`, 'Content-Type': 'application/json' },
@@ -251,6 +308,8 @@ async function loadFromGist() {
     if (data.program && data.program.length > 0) {
       program = data.program;
       history = data.history || [];
+      days = (data.days && data.days.length) ? data.days : DEFAULT_DAYS;
+      rotation = (data.rotation && data.rotation.length) ? data.rotation : days.map(d=>d.id);
       saveAll();
       setSyncBar('Loaded from cloud ✓');
       return true;
@@ -326,7 +385,8 @@ function pillClass(sym) {
 // STATE
 // ============================================================
 let view = "dashboard";
-let editorDay = 1;
+let editorDay = (days[0] && days[0].id) || 1;
+let showDayManager = false;
 let editingId = null;
 let editDraft = {};
 let flashMsg = "";
@@ -366,9 +426,9 @@ function render() {
   });
   const titles = {
     dashboard:  ['Gym Tracker',''],
-    workout:    session&&!session.done ? [`Day ${session.day} — ${DAY_NAMES[session.day]}`,''] : ['Workout',''],
+    workout:    session&&!session.done ? [`${dayLabelById(session.day)} — ${dayName(session.day)}`,''] : ['Workout',''],
     summary:    ['Summary',''],
-    editor:     ['Edit Program', `Day ${editorDay} — ${DAY_NAMES[editorDay]}`],
+    editor:     ['Edit Program', `${dayLabelById(editorDay)} — ${dayName(editorDay)}`],
     exportpage: ['Export / Sync','']
   };
   const [title,sub] = titles[view]||['Gym Tracker',''];
@@ -433,11 +493,16 @@ function renderSetup(main) {
 // ============================================================
 // DASHBOARD
 // ============================================================
-function getNextDay() {
-  // Return the next day in rotation based on last completed session (1→2→3→4→1)
-  if (!history.length) return 1;
-  const last = history[history.length - 1];
-  return (last.day % 4) + 1;
+function getNextDayId() {
+  // Walk the rotation sequence (e.g. Upper, Lower, Upper, Core, repeat) —
+  // position is simply how many workouts have been completed so far, so
+  // the pattern repeats regardless of which specific day a session lands on.
+  if (!days.length) return null;
+  const seq = (rotation && rotation.length)
+    ? rotation.filter(id=>days.some(d=>d.id===id))
+    : days.map(d=>d.id);
+  if (!seq.length) return days[0].id;
+  return seq[history.length % seq.length];
 }
 
 function renderDashboard(main) {
@@ -445,7 +510,7 @@ function renderDashboard(main) {
   if (session&&!session.done) {
     const banner = el('div',{class:'resume-banner'});
     const info = el('div');
-    info.innerHTML = `<div style="font-weight:600;font-size:14px">Active: Day ${session.day}</div><div style="font-size:12px;color:var(--text2);margin-top:2px">${DAY_NAMES[session.day]}</div>`;
+    info.innerHTML = `<div style="font-weight:600;font-size:14px">Active: ${dayLabelById(session.day)}</div><div style="font-size:12px;color:var(--text2);margin-top:2px">${dayName(session.day)}</div>`;
     banner.appendChild(info);
     const bannerBtns = el('div',{style:'display:flex;gap:8px'});
     bannerBtns.appendChild(el('button',{class:'btn primary',onclick:()=>setView('workout')},['Resume']));
@@ -458,9 +523,18 @@ function renderDashboard(main) {
     main.appendChild(banner);
   }
 
-  const nextDay = getNextDay();
+  if (!days.length) {
+    main.appendChild(el('div',{class:'empty-state'},[
+      'No days set up yet.',el('br'),el('br'),
+      el('button',{class:'btn primary',onclick:()=>setView('editor')},['Go to Edit'])
+    ]));
+    return;
+  }
 
-  for (let d=1;d<=4;d++) {
+  const nextDay = getNextDayId();
+
+  days.forEach(dayObj=>{
+    const d = dayObj.id;
     const exes = program.filter(e=>e.day===d);
     const last = history.filter(h=>h.day===d).slice(-1)[0];
     const lastDate = last ? new Date(last.date).toLocaleDateString('en-AU',{weekday:'short',day:'numeric',month:'short'}) : 'Never';
@@ -475,14 +549,14 @@ function renderDashboard(main) {
     const badge = isNext
       ? `<span style="font-size:11px;font-weight:600;color:var(--green-text);background:var(--green-bg);padding:2px 8px;border-radius:20px;margin-left:6px">Up next</span>`
       : '';
-    card.innerHTML=`<div class="day-num">Day ${d} &nbsp;·&nbsp; ${exes.length} exercises${badge}</div><div class="day-name">${DAY_NAMES[d]}</div><div class="day-meta">Last: ${lastDate}</div>`;
+    card.innerHTML=`<div class="day-num">${dayLabelById(d)} &nbsp;·&nbsp; ${exes.length} exercises${badge}</div><div class="day-name">${dayObj.name}</div><div class="day-meta">Last: ${lastDate}</div>`;
     main.appendChild(card);
-  }
+  });
 }
 
 function startWorkout(d) {
   if (session&&!session.done) {
-    if (!confirm(`Abandon current Day ${session.day} session and start Day ${d}?`)) return;
+    if (!confirm(`Abandon current ${dayLabelById(session.day)} session and start ${dayLabelById(d)}?`)) return;
   }
   const exes = program.filter(e=>e.day===d);
   const loggedSets={}, notes={};
@@ -506,7 +580,7 @@ function renderWorkout(main) {
   }
   const dayExes = program.filter(e=>e.day===session.day);
   const curEx = dayExes[session.exIndex];
-  const pct = Math.round(session.exIndex/dayExes.length*100);
+  const pct = dayExes.length ? Math.round(session.exIndex/dayExes.length*100) : 100;
   const pb = el('div',{class:'progress-bar'});
   pb.appendChild(el('div',{class:'progress-fill',style:`width:${pct}%`}));
   main.appendChild(pb);
@@ -662,7 +736,7 @@ function skipExercise() {
 async function finishWorkout() {
   const dayExes=program.filter(e=>e.day===session.day);
   const entry={
-    date:new Date().toISOString(), day:session.day, dayName:DAY_NAMES[session.day],
+    date:new Date().toISOString(), day:session.day, dayName:dayName(session.day),
     dayNotes:session.dayNotes,
     exercises:dayExes.map(e=>{
       const logged=session.loggedSets[e.id]||[];
@@ -684,8 +758,9 @@ async function finishWorkout() {
 // ============================================================
 function renderSummary(main) {
   main.appendChild(el('h2',{},['Summary']));
-  for (let d=1;d<=4;d++) {
-    main.appendChild(el('div',{class:'section-label'},[`Day ${d} — ${DAY_NAMES[d]}`]));
+  days.forEach(dayObj=>{
+    const d = dayObj.id;
+    main.appendChild(el('div',{class:'section-label'},[`${dayLabelById(d)} — ${dayObj.name}`]));
     const card=el('div',{class:'card',style:'overflow:auto'});
     const tbl=el('table');
     tbl.innerHTML='<thead><tr><th>Exercise</th><th>Weight</th><th></th><th>Top</th></tr></thead>';
@@ -696,14 +771,14 @@ function renderSummary(main) {
       tb.appendChild(tr);
     });
     tbl.appendChild(tb); card.appendChild(tbl); main.appendChild(card);
-  }
+  });
   if (history.length>0) {
     main.appendChild(el('div',{class:'section-label'},['Recent sessions']));
     history.slice(-10).reverse().forEach(entry=>{
       const card=el('div',{class:'card'});
       const date=new Date(entry.date).toLocaleDateString('en-AU',{weekday:'short',day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'});
       const hdr=el('div',{class:'card-row'});
-      hdr.innerHTML=`<span style="font-weight:600">Day ${entry.day} — ${entry.dayName}</span><span style="font-size:12px;color:var(--text2)">${date}</span>`;
+      hdr.innerHTML=`<span style="font-weight:600">${dayLabelById(entry.day)} — ${entry.dayName}</span><span style="font-size:12px;color:var(--text2)">${date}</span>`;
       card.appendChild(hdr);
       if (entry.dayNotes){const dn=el('div',{class:'card-row'});dn.innerHTML=`<span class="note-text">${entry.dayNotes}</span>`;card.appendChild(dn);}
       entry.exercises.filter(e=>e.loggedSets&&e.loggedSets.length>0).forEach(e=>{
@@ -727,12 +802,78 @@ function renderSummary(main) {
 // ============================================================
 // EDITOR
 // ============================================================
-function renderEditor(main) {
-  const dayPicker=el('div',{style:'display:flex;gap:6px;margin-bottom:14px;flex-wrap:wrap'});
-  for(let d=1;d<=4;d++){
-    dayPicker.appendChild(el('button',{class:'btn'+(editorDay===d?' primary':''),onclick:()=>{editorDay=d;editingId=null;render();}},['Day '+d]));
+function renderDayManager(main) {
+  main.appendChild(el('div',{class:'section-label'},['Manage days']));
+  const card=el('div',{class:'card'});
+  days.forEach((d,i)=>{
+    const row=el('div',{class:'card-row'});
+    const nameIn=el('input',{type:'text',class:'day-name-input'});
+    nameIn.value=d.name;
+    nameIn.onblur=()=>{ d.name=nameIn.value.trim()||d.name; saveAll(); render(); };
+    nameIn.onkeydown=(e)=>{ if(e.key==='Enter') nameIn.blur(); };
+    row.appendChild(nameIn);
+    const acts=el('div',{style:'display:flex;gap:6px;flex-shrink:0'});
+    if(i>0) acts.appendChild(el('button',{class:'btn sm',onclick:()=>{[days[i-1],days[i]]=[days[i],days[i-1]];saveAll();render();}},['↑']));
+    if(i<days.length-1) acts.appendChild(el('button',{class:'btn sm',onclick:()=>{[days[i+1],days[i]]=[days[i],days[i+1]];saveAll();render();}},['↓']));
+    acts.appendChild(el('button',{class:'btn sm danger',onclick:()=>removeDay(d.id)},['Delete']));
+    row.appendChild(acts);
+    card.appendChild(row);
+  });
+  main.appendChild(card);
+  main.appendChild(el('button',{class:'btn full',style:'margin-top:8px',onclick:addDay},['+ Add day']));
+
+  renderRotationManager(main);
+}
+
+function renderRotationManager(main) {
+  main.appendChild(el('div',{class:'section-label',style:'margin-top:20px'},['Workout rotation order']));
+  main.appendChild(el('div',{style:'font-size:12px;color:var(--text2);margin:-4px 2px 8px;line-height:1.5'},[
+    'The sequence "Up next" follows on the Days tab. Add a day more than once if it should repeat — e.g. Upper, Lower, Upper, Core.'
+  ]));
+  const card=el('div',{class:'card'});
+  if (!rotation.length) {
+    card.appendChild(el('div',{class:'card-row',style:'color:var(--text3);font-size:13px'},['Empty — falls back to day list order']));
   }
-  main.appendChild(dayPicker);
+  rotation.forEach((id,i)=>{
+    const row=el('div',{class:'card-row'});
+    row.appendChild(el('span',{style:'font-size:14px'},[`${i+1}. ${dayName(id)}`]));
+    const acts=el('div',{style:'display:flex;gap:6px;flex-shrink:0'});
+    if(i>0) acts.appendChild(el('button',{class:'btn sm',onclick:()=>{[rotation[i-1],rotation[i]]=[rotation[i],rotation[i-1]];saveAll();render();}},['↑']));
+    if(i<rotation.length-1) acts.appendChild(el('button',{class:'btn sm',onclick:()=>{[rotation[i+1],rotation[i]]=[rotation[i],rotation[i+1]];saveAll();render();}},['↓']));
+    acts.appendChild(el('button',{class:'btn sm danger',onclick:()=>{rotation.splice(i,1);saveAll();render();}},['✕']));
+    row.appendChild(acts);
+    card.appendChild(row);
+  });
+  main.appendChild(card);
+
+  main.appendChild(el('div',{class:'form-label',style:'margin-top:10px'},['Add to sequence']));
+  const addRow=el('div',{style:'display:flex;gap:6px;flex-wrap:wrap'});
+  days.forEach(d=>{
+    addRow.appendChild(el('button',{class:'btn sm',onclick:()=>{rotation.push(d.id);saveAll();render();}},['+ '+d.name]));
+  });
+  main.appendChild(addRow);
+  main.appendChild(el('button',{class:'btn full',style:'margin-top:10px',onclick:()=>{
+    rotation = days.map(d=>d.id); saveAll(); render();
+  }},['Reset to day list order']));
+}
+
+function renderEditor(main) {
+  const dayPickerRow=el('div',{style:'display:flex;align-items:flex-start;justify-content:space-between;gap:8px;margin-bottom:14px'});
+  const dayPicker=el('div',{style:'display:flex;gap:6px;flex-wrap:wrap'});
+  days.forEach(d=>{
+    dayPicker.appendChild(el('button',{class:'btn'+(editorDay===d.id?' primary':''),onclick:()=>{editorDay=d.id;editingId=null;render();}},[d.name]));
+  });
+  dayPickerRow.appendChild(dayPicker);
+  dayPickerRow.appendChild(el('button',{class:'btn sm',style:'flex-shrink:0',onclick:()=>{showDayManager=!showDayManager;render();}},[showDayManager?'Done':'Manage days']));
+  main.appendChild(dayPickerRow);
+
+  if (showDayManager) renderDayManager(main);
+
+  if (!days.length) {
+    main.appendChild(el('div',{class:'empty-state'},['Add a day to start building your program.']));
+    return;
+  }
+
   const exes=program.filter(e=>e.day===editorDay);
   main.appendChild(el('button',{class:'btn full',onclick:()=>{
     const newId=Date.now();
@@ -763,6 +904,9 @@ function renderEditor(main) {
       const cb2=el('div',{class:'form-group'}); const lbl=el('label',{class:'checkbox-row'});
       const cb=el('input',{type:'checkbox'}); cb.checked=!!editDraft.perHand; cb.onchange=()=>editDraft.perHand=cb.checked;
       lbl.appendChild(cb); lbl.appendChild(document.createTextNode('Per hand / per side')); cb2.appendChild(lbl); body.appendChild(cb2);
+      const cb3=el('div',{class:'form-group'}); const lbl2=el('label',{class:'checkbox-row'});
+      const cbt=el('input',{type:'checkbox'}); cbt.checked=!!editDraft.isTime; cbt.onchange=()=>editDraft.isTime=cbt.checked;
+      lbl2.appendChild(cbt); lbl2.appendChild(document.createTextNode('Timed hold (log seconds instead of reps)')); cb3.appendChild(lbl2); body.appendChild(cb3);
       const br=el('div',{style:'display:flex;gap:8px;flex-wrap:wrap'});
       br.appendChild(el('button',{class:'btn primary',onclick:()=>{Object.assign(ex,editDraft);editingId=null;saveAll();render();}},['Save']));
       br.appendChild(el('button',{class:'btn',onclick:()=>{editingId=null;render();}},['Cancel']));
@@ -827,12 +971,12 @@ function renderExportPage(main) {
   main.appendChild(el('div',{class:'section-label'},['Export / Import']));
   const expCard=el('div',{class:'card card-body'});
   expCard.appendChild(el('button',{class:'btn full',onclick:()=>{
-    const rows=[['Day','Exercise','Weight','StartRes','PerHand','Symbol','TopRep','Sets','RepMin','RepMax','Notes']];
-    program.forEach(e=>rows.push([e.day,e.name,e.weight,e.startRes,e.perHand?1:0,e.symbol,e.topRep,e.sets,e.repMin,e.repMax,e.notes]));
+    const rows=[['DayId','DayName','Exercise','Weight','StartRes','PerHand','Symbol','TopRep','Sets','RepMin','RepMax','Notes']];
+    program.forEach(e=>rows.push([e.day,dayName(e.day),e.name,e.weight,e.startRes,e.perHand?1:0,e.symbol,e.topRep,e.sets,e.repMin,e.repMax,e.notes]));
     downloadCSV(rows,'workout_program.csv'); showMsg('Program exported','success');
   }},['Export program CSV']));
   expCard.appendChild(el('button',{class:'btn full',onclick:()=>{
-    const rows=[['Date','Day','DayName','Exercise','Weight','Symbol','TopRep','Sets','Notes']];
+    const rows=[['Date','DayId','DayName','Exercise','Weight','Symbol','TopRep','Sets','Notes']];
     history.forEach(h=>h.exercises.forEach(e=>{
       rows.push([h.date,h.day,h.dayName,e.name,e.weight,e.symbolSession||'',e.topRepSession||'',(e.loggedSets||[]).map(s=>`${s.weight}×${s.reps}`).join('; '),e.sessionNotes||'']);
     }));
@@ -840,11 +984,12 @@ function renderExportPage(main) {
   }},['Export history CSV']));
   expCard.appendChild(el('button',{class:'btn full',onclick:()=>{
     let md='# Workout Program\n\n';
-    for(let d=1;d<=4;d++){
-      md+=`## Day ${d} — ${DAY_NAMES[d]}\n\n| Exercise | Weight | | Top | Sets×Range | Notes |\n|---|---|---|---|---|---|\n`;
+    days.forEach(dayObj=>{
+      const d=dayObj.id;
+      md+=`## ${dayLabelById(d)} — ${dayObj.name}\n\n| Exercise | Weight | | Top | Sets×Range | Notes |\n|---|---|---|---|---|---|\n`;
       program.filter(e=>e.day===d).forEach(e=>{md+=`| ${e.name} | ${formatWeightShort(e)} | ${e.symbol||'—'} | ${e.topRep||'—'} | ${e.sets}×${e.repMin}–${e.repMax} | ${e.notes||''} |\n`;});
       md+='\n';
-    }
+    });
     if(navigator.clipboard){navigator.clipboard.writeText(md).then(()=>showMsg('Markdown copied','success'));}
     else{const ta=document.createElement('textarea');ta.value=md;document.body.appendChild(ta);ta.select();document.execCommand('copy');document.body.removeChild(ta);showMsg('Markdown copied','success');}
   }},['Copy markdown summary']));
@@ -858,8 +1003,20 @@ function renderExportPage(main) {
       const lines=ev.target.result.split('\n').filter(l=>l.trim());
       const parseRow=l=>{const cols=[];let cur='',inQ=false;for(let ch of l){if(ch==='"')inQ=!inQ;else if(ch===','&&!inQ){cols.push(cur);cur='';}else cur+=ch;}cols.push(cur);return cols.map(c=>c.trim());};
       const header=parseRow(lines[0]);
-      const imported=lines.slice(1).map(l=>{const r=parseRow(l);const obj={};header.forEach((h,i)=>obj[h]=r[i]);return{id:Date.now()+Math.random(),day:parseInt(obj.Day)||1,name:obj.Exercise||'',weight:parseFloat(obj.Weight)||0,startRes:parseFloat(obj.StartRes)||0,perHand:obj.PerHand==='1',symbol:obj.Symbol||'',topRep:parseInt(obj.TopRep)||0,sets:parseInt(obj.Sets)||3,repMin:parseInt(obj.RepMin)||8,repMax:parseInt(obj.RepMax)||12,notes:obj.Notes||''};}).filter(e=>e.name);
-      if(confirm(`Import ${imported.length} exercises? This replaces the current program.`)){program=imported;saveAll();showMsg(`Imported ${imported.length} exercises`,'success');}
+      const dayIdCol = header.includes('DayId') ? 'DayId' : 'Day'; // back-compat with old export format
+      const imported=lines.slice(1).map(l=>{const r=parseRow(l);const obj={};header.forEach((h,i)=>obj[h]=r[i]);return{id:Date.now()+Math.random(),day:parseInt(obj[dayIdCol])||1,name:obj.Exercise||'',weight:parseFloat(obj.Weight)||0,startRes:parseFloat(obj.StartRes)||0,perHand:obj.PerHand==='1',symbol:obj.Symbol||'',topRep:parseInt(obj.TopRep)||0,sets:parseInt(obj.Sets)||3,repMin:parseInt(obj.RepMin)||8,repMax:parseInt(obj.RepMax)||12,notes:obj.Notes||'',_dayName:obj.DayName||''};}).filter(e=>e.name);
+      if(confirm(`Import ${imported.length} exercises? This replaces the current program.`)){
+        // Ensure a day exists for every DayId referenced in the import
+        const neededIds=[...new Set(imported.map(e=>e.day))];
+        neededIds.forEach(id=>{
+          if(!days.find(d=>d.id===id)){
+            const nameFromCsv=(imported.find(e=>e.day===id)._dayName)||`Imported Day ${id}`;
+            days.push({id,name:nameFromCsv});
+          }
+        });
+        program=imported.map(({_dayName,...rest})=>rest);
+        saveAll();showMsg(`Imported ${imported.length} exercises`,'success');
+      }
     };
     reader.readAsText(e.target.files[0]);
   };
@@ -870,13 +1027,13 @@ function renderExportPage(main) {
   main.appendChild(el('div',{class:'section-label'},['Reset']));
   const resetCard=el('div',{class:'card card-body'});
   resetCard.appendChild(el('button',{class:'btn danger full',onclick:()=>{if(confirm('Reset current session?')){session=null;saveAll();showMsg('Session cleared','info');}}},['Reset current session']));
-  resetCard.appendChild(el('button',{class:'btn danger full',onclick:()=>{if(confirm('Reset ALL data to factory defaults? Cannot be undone.')){program=DEFAULT_PROGRAM.map((e,i)=>({...e,id:i}));session=null;history=[];saveAll();showMsg('Reset to defaults','info');}}},['Reset all data to defaults']));
+  resetCard.appendChild(el('button',{class:'btn danger full',onclick:()=>{if(confirm('Reset ALL data to factory defaults? Cannot be undone.')){days=DEFAULT_DAYS.map(d=>({...d}));program=DEFAULT_PROGRAM.map((e,i)=>({...e,id:i}));session=null;history=[];rotation=days.map(d=>d.id);editorDay=days[0].id;saveAll();showMsg('Reset to defaults','info');}}},['Reset all data to defaults']));
   main.appendChild(resetCard);
 
   // About
   main.appendChild(el('div',{class:'section-label'},['About']));
   const aboutCard=el('div',{class:'card card-body'});
-  aboutCard.innerHTML=`<div style="font-size:13px;color:var(--text2);line-height:1.6"><strong style="color:var(--text)">${program.length}</strong> exercises &nbsp;·&nbsp; <strong style="color:var(--text)">${history.length}</strong> sessions logged<br>${hasToken?'Auto-syncing to GitHub Gist ✓':'Local storage only'}<br><br><strong style="color:var(--text)">To install on iPhone:</strong><br>Safari → Share → "Add to Home Screen"</div>`;
+  aboutCard.innerHTML=`<div style="font-size:13px;color:var(--text2);line-height:1.6"><strong style="color:var(--text)">${days.length}</strong> days &nbsp;·&nbsp; <strong style="color:var(--text)">${program.length}</strong> exercises &nbsp;·&nbsp; <strong style="color:var(--text)">${history.length}</strong> sessions logged<br>${hasToken?'Auto-syncing to GitHub Gist ✓':'Local storage only'}<br><br><strong style="color:var(--text)">To install on iPhone:</strong><br>Safari → Share → "Add to Home Screen"</div>`;
   main.appendChild(aboutCard);
 }
 
@@ -888,6 +1045,7 @@ async function init() {
   if (hasToken) {
     setSyncBar('Connecting…');
     await loadFromGist();
+    editorDay = (days[0] && days[0].id) || 1;
   }
   render();
 }
