@@ -2,17 +2,6 @@
 
 A personal workout tracking web app built as a single HTML file. Designed for mobile use, installed as a PWA. No backend, no account — all data lives on the device. 
 
-## Workout Program
-
-| Day | Name |
-|-----|------|
-| Day 1 | Upper |
-| Day 2 | Lower |
-| Day 3 | Upper |
-| Day 4 | Lower + Core |
-
----
-
 ## Progression Logic
 
 After each exercise the app calculates a symbol based on top set:
